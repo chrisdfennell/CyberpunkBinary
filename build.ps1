@@ -82,4 +82,22 @@ if ($Run) {
 
     $monkeydo = Join-Path $sdkBin "monkeydo.bat"
     & $monkeydo $tempPrg $Device
+
+    # Copy settings JSON files directly to the simulator's settings directories
+    # to ensure the App Settings Editor can locate the schema.
+    $simTempDir = Join-Path $env:TEMP "com.garmin.connectiq\GARMIN"
+    if (Test-Path -Path $simTempDir) {
+        $simSettingsDirs = @(
+            (Join-Path $simTempDir "Settings"),
+            (Join-Path $simTempDir "APPS\SETTINGS")
+        )
+        foreach ($dir in $simSettingsDirs) {
+            if (!(Test-Path -Path $dir)) {
+                New-Item -ItemType Directory -Path $dir | Out-Null
+            }
+            foreach ($name in $settingsNames) {
+                Copy-Item $settingsSrc (Join-Path $dir $name) -Force
+            }
+        }
+    }
 }
