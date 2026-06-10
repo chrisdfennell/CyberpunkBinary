@@ -67,5 +67,5 @@ if ($Run) {
     Copy-Item (Join-Path $PSScriptRoot "bin\BinaryWatchFace-settings.json") $tempJson -Force
 
     $monkeydo = Join-Path $sdkBin "monkeydo.bat"
-    & $monkeydo $tempPrg $Device
+    & $monkeydo $tempPrg $Device /a $tempJson "GARMIN\APPS\SETTINGS\BINARYWATCHFACE.json"
 }
