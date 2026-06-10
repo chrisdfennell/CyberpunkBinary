@@ -13,6 +13,7 @@
             <iq:uses-permission id="SensorHistory"/>
         </iq:permissions>
         <iq:languages>
+            <iq:language>eng</iq:language>
         </iq:languages>
         <iq:barrels>
         </iq:barrels>

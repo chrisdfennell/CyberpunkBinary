@@ -62,10 +62,24 @@ if ($Run) {
         New-Item -ItemType Directory -Path $tempDir | Out-Null
     }
     $tempPrg = Join-Path $tempDir "BinaryWatchFace.prg"
-    $tempJson = Join-Path $tempDir "BinaryWatchFace-settings.json"
     Copy-Item $outputPath $tempPrg -Force
-    Copy-Item (Join-Path $PSScriptRoot "bin\BinaryWatchFace-settings.json") $tempJson -Force
+    
+    $settingsSrc = Join-Path $PSScriptRoot "bin\BinaryWatchFace-settings.json"
+    $settingsNames = @(
+        "BinaryWatchFace-settings.json",
+        "BinaryWatchFace.json",
+        "Binary Watch-settings.json",
+        "Binary Watch.json",
+        "Binary_Watch-settings.json",
+        "Binary_Watch.json",
+        "BINARYWATCHFACE.json",
+        "9b0af51a-2c01-42bc-bb85-e3df17893ec6.json",
+        "9b0af51a-2c01-42bc-bb85-e3df17893ec6-settings.json"
+    )
+    foreach ($name in $settingsNames) {
+        Copy-Item $settingsSrc (Join-Path $tempDir $name) -Force
+    }
 
     $monkeydo = Join-Path $sdkBin "monkeydo.bat"
-    & $monkeydo $tempPrg $Device /a $tempJson "GARMIN\APPS\SETTINGS\BINARYWATCHFACE.json"
+    & $monkeydo $tempPrg $Device
 }
