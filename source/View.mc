@@ -528,20 +528,20 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 // 1. Draw battery reading slightly shifted up
                 dc.drawText(cx, statsY - 9, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
                 
-                // 2. Draw solar intensity directly below it
+                // 2. Draw solar intensity directly below it (shifted down to avoid overlap)
                 var solarVal = (stats.solarIntensity != null) ? stats.solarIntensity : 0;
                 var solarStr = solarVal.toString() + "%";
                 var textWidth = dc.getTextWidthInPixels(solarStr, Graphics.FONT_XTINY);
-                var totalWidth = textWidth + 12; // 6px icon + 6px gap
-                var iconX = cx - (totalWidth / 2) + 3;
-                var textX = cx + 6;
+                var totalWidth = textWidth + 20; // 14px icon + 6px gap
+                var iconX = cx - (totalWidth / 2) + 7;
+                var textX = cx + 10;
                 
                 // Draw tiny sun icon (Cyberpunk orange/yellow)
-                drawTinySunIcon(dc, iconX, statsY + 13, 0xFFAA00);
+                drawTinySunIcon(dc, iconX, statsY + 19, 0xFFAA00);
                 
                 // Draw solar text
                 dc.setColor(0xA9B1D6, Graphics.COLOR_TRANSPARENT); // Dimmer blue-grey for secondary stats
-                dc.drawText(textX, statsY + 6, Graphics.FONT_XTINY, solarStr, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(textX, statsY + 12, Graphics.FONT_XTINY, solarStr, Graphics.TEXT_JUSTIFY_CENTER);
             } else {
                 // Highlight middle slot, else print standard text
                 var textColor = (i == 1) ? themeColor : 0xCDD6F4;
@@ -623,11 +623,19 @@ class BinaryWatchView extends WatchUi.WatchFace {
     function drawTinySunIcon(dc as Dc, x as Number, y as Number, color as Number) as Void {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(1);
-        dc.fillCircle(x, y, 2);
-        dc.drawPoint(x, y - 3);
-        dc.drawPoint(x, y + 3);
-        dc.drawPoint(x - 3, y);
-        dc.drawPoint(x + 3, y);
+        dc.fillCircle(x, y, 3);
+        
+        // Orthogonal rays
+        dc.drawLine(x, y - 5, x, y - 7);
+        dc.drawLine(x, y + 5, x, y + 7);
+        dc.drawLine(x - 5, y, x - 7, y);
+        dc.drawLine(x + 5, y, x + 7, y);
+        
+        // Diagonal rays
+        dc.drawLine(x - 4, y - 4, x - 5, y - 5);
+        dc.drawLine(x + 4, y - 4, x + 5, y - 5);
+        dc.drawLine(x - 4, y + 4, x - 5, y + 5);
+        dc.drawLine(x + 4, y + 4, x + 5, y + 5);
     }
 
     // Called when this View is removed from the screen. Save the
