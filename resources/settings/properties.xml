@@ -1,0 +1,8 @@
+<properties>
+    <property id="ShowSeconds" type="boolean">true</property>
+    <property id="ColorTheme" type="number">0</property>
+    <property id="GridMode" type="number">0</property>
+    <property id="DataLeft" type="number">0</property>
+    <property id="DataCenter" type="number">1</property>
+    <property id="DataRight" type="number">2</property>
+</properties>

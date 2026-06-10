@@ -1,0 +1,61 @@
+<settings>
+    <setting propertyKey="@Properties.ShowSeconds" title="@Strings.ShowSecondsTitle" prompt="@Strings.ShowSecondsTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.GridMode" title="@Strings.GridModeTitle" prompt="@Strings.GridModeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.GridModeBCD</listEntry>
+            <listEntry value="1">@Strings.GridModePure</listEntry>
+        </settingConfig>
+    </setting>
+    
+    <setting propertyKey="@Properties.ColorTheme" title="@Strings.ColorThemeTitle" prompt="@Strings.ColorThemeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.ThemeCyan</listEntry>
+            <listEntry value="1">@Strings.ThemePink</listEntry>
+            <listEntry value="2">@Strings.ThemeGreen</listEntry>
+            <listEntry value="3">@Strings.ThemeAmber</listEntry>
+            <listEntry value="4">@Strings.ThemeSlate</listEntry>
+        </settingConfig>
+    </setting>
+    
+    <setting propertyKey="@Properties.DataLeft" title="@Strings.DataLeftTitle" prompt="@Strings.DataLeftTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.DataSteps</listEntry>
+            <listEntry value="1">@Strings.DataBattery</listEntry>
+            <listEntry value="2">@Strings.DataHR</listEntry>
+            <listEntry value="3">@Strings.DataWeather</listEntry>
+            <listEntry value="4">@Strings.DataCalories</listEntry>
+            <listEntry value="5">@Strings.DataActiveMinutes</listEntry>
+            <listEntry value="6">@Strings.DataDistance</listEntry>
+            <listEntry value="7">@Strings.DataHRGraph</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.DataCenter" title="@Strings.DataCenterTitle" prompt="@Strings.DataCenterTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.DataSteps</listEntry>
+            <listEntry value="1">@Strings.DataBattery</listEntry>
+            <listEntry value="2">@Strings.DataHR</listEntry>
+            <listEntry value="3">@Strings.DataWeather</listEntry>
+            <listEntry value="4">@Strings.DataCalories</listEntry>
+            <listEntry value="5">@Strings.DataActiveMinutes</listEntry>
+            <listEntry value="6">@Strings.DataDistance</listEntry>
+            <listEntry value="7">@Strings.DataHRGraph</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.DataRight" title="@Strings.DataRightTitle" prompt="@Strings.DataRightTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.DataSteps</listEntry>
+            <listEntry value="1">@Strings.DataBattery</listEntry>
+            <listEntry value="2">@Strings.DataHR</listEntry>
+            <listEntry value="3">@Strings.DataWeather</listEntry>
+            <listEntry value="4">@Strings.DataCalories</listEntry>
+            <listEntry value="5">@Strings.DataActiveMinutes</listEntry>
+            <listEntry value="6">@Strings.DataDistance</listEntry>
+            <listEntry value="7">@Strings.DataHRGraph</listEntry>
+        </settingConfig>
+    </setting>
+</settings>

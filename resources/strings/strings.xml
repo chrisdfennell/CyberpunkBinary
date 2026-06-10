@@ -1,0 +1,32 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">Binary Watch</string>
+    <string id="ShowSecondsTitle">Show Seconds</string>
+    
+    <!-- Grid Mode Strings -->
+    <string id="GridModeTitle">Grid Layout Mode</string>
+    <string id="GridModeBCD">Binary Coded Decimal (BCD)</string>
+    <string id="GridModePure">Pure Binary</string>
+
+    <!-- Color Theme Strings -->
+    <string id="ColorThemeTitle">Color Theme</string>
+    <string id="ThemeCyan">Cyberpunk Cyan</string>
+    <string id="ThemePink">Neon Pink</string>
+    <string id="ThemeGreen">Radioactive Green</string>
+    <string id="ThemeAmber">Sci-Fi Amber</string>
+    <string id="ThemeSlate">Monochrome Slate</string>
+    
+    <!-- Data Field Configuration Strings -->
+    <string id="DataLeftTitle">Data Slot: Left</string>
+    <string id="DataCenterTitle">Data Slot: Center</string>
+    <string id="DataRightTitle">Data Slot: Right</string>
+    
+    <!-- Data Field Values -->
+    <string id="DataSteps">Steps</string>
+    <string id="DataBattery">Battery % or Days</string>
+    <string id="DataHR">Heart Rate</string>
+    <string id="DataWeather">Weather Temp</string>
+    <string id="DataCalories">Calories</string>
+    <string id="DataActiveMinutes">Active Minutes</string>
+    <string id="DataDistance">Distance</string>
+    <string id="DataHRGraph">Heart Rate Graph</string>
+</strings>
