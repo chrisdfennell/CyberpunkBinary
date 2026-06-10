@@ -56,7 +56,16 @@ if ($Run) {
         Write-Host "Simulator is already running." -ForegroundColor Cyan
     }
 
-    Write-Host "Deploying $outputPath to $Device in simulator..." -ForegroundColor Cyan
+    Write-Host "Deploying to $Device in simulator (copying to space-free path to support settings)..." -ForegroundColor Cyan
+    $tempDir = "C:\Garmin_Temp"
+    if (!(Test-Path -Path $tempDir)) {
+        New-Item -ItemType Directory -Path $tempDir | Out-Null
+    }
+    $tempPrg = Join-Path $tempDir "BinaryWatchFace.prg"
+    $tempJson = Join-Path $tempDir "BinaryWatchFace-settings.json"
+    Copy-Item $outputPath $tempPrg -Force
+    Copy-Item (Join-Path $PSScriptRoot "bin\BinaryWatchFace-settings.json") $tempJson -Force
+
     $monkeydo = Join-Path $sdkBin "monkeydo.bat"
-    & $monkeydo $outputPath $Device
+    & $monkeydo $tempPrg $Device
 }
