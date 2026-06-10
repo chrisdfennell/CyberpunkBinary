@@ -519,6 +519,29 @@ class BinaryWatchView extends WatchUi.WatchFace {
             if (setting == 7) {
                 // Draw Heart Rate Sparkline Graph instead of text
                 drawHRSparkline(dc, cx, statsY - 5);
+            } else if (setting == 1 && System.getSystemStats() has :solarIntensity) {
+                // If this is the battery slot and the watch has solar capability, draw battery and solar below it
+                var stats = System.getSystemStats();
+                var textColor = (i == 1) ? themeColor : 0xCDD6F4;
+                dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
+                
+                // 1. Draw battery reading slightly shifted up
+                dc.drawText(cx, statsY - 9, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
+                
+                // 2. Draw solar intensity directly below it
+                var solarVal = (stats.solarIntensity != null) ? stats.solarIntensity : 0;
+                var solarStr = solarVal.toString() + "%";
+                var textWidth = dc.getTextWidthInPixels(solarStr, Graphics.FONT_XTINY);
+                var totalWidth = textWidth + 12; // 6px icon + 6px gap
+                var iconX = cx - (totalWidth / 2) + 3;
+                var textX = cx + 6;
+                
+                // Draw tiny sun icon (Cyberpunk orange/yellow)
+                drawTinySunIcon(dc, iconX, statsY + 13, 0xFFAA00);
+                
+                // Draw solar text
+                dc.setColor(0xA9B1D6, Graphics.COLOR_TRANSPARENT); // Dimmer blue-grey for secondary stats
+                dc.drawText(textX, statsY + 6, Graphics.FONT_XTINY, solarStr, Graphics.TEXT_JUSTIFY_CENTER);
             } else {
                 // Highlight middle slot, else print standard text
                 var textColor = (i == 1) ? themeColor : 0xCDD6F4;
@@ -595,6 +618,16 @@ class BinaryWatchView extends WatchUi.WatchFace {
         var hrStr = (currentHR != null) ? currentHR.toString() : "--";
         dc.setColor(0x787D90, Graphics.COLOR_TRANSPARENT);
         dc.drawText(slotX, slotY - 8, Graphics.FONT_XTINY, hrStr, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function drawTinySunIcon(dc as Dc, x as Number, y as Number, color as Number) as Void {
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(1);
+        dc.fillCircle(x, y, 2);
+        dc.drawPoint(x, y - 3);
+        dc.drawPoint(x, y + 3);
+        dc.drawPoint(x - 3, y);
+        dc.drawPoint(x + 3, y);
     }
 
     // Called when this View is removed from the screen. Save the
