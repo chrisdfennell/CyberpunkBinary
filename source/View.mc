@@ -477,6 +477,15 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Heart Rate Graph Sparkline (returns label, value is drawn custom in drawStats)
             label = "HR TREND";
             valStr = "GRAPH";
+        } else if (type == 8) {
+            // Solar Charging Intensity
+            label = "SOLAR";
+            var stats = System.getSystemStats();
+            if (stats has :solarIntensity && stats.solarIntensity != null) {
+                valStr = stats.solarIntensity.toString() + "%";
+            } else {
+                valStr = "0%";
+            }
         }
         
         return [label, valStr];

@@ -29,4 +29,5 @@
     <string id="DataActiveMinutes">Active Minutes</string>
     <string id="DataDistance">Distance</string>
     <string id="DataHRGraph">Heart Rate Graph</string>
+    <string id="DataSolar">Solar Intensity</string>
 </strings>

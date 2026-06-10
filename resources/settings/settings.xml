@@ -30,6 +30,7 @@
             <listEntry value="5">@Strings.DataActiveMinutes</listEntry>
             <listEntry value="6">@Strings.DataDistance</listEntry>
             <listEntry value="7">@Strings.DataHRGraph</listEntry>
+            <listEntry value="8">@Strings.DataSolar</listEntry>
         </settingConfig>
     </setting>
 
@@ -43,6 +44,7 @@
             <listEntry value="5">@Strings.DataActiveMinutes</listEntry>
             <listEntry value="6">@Strings.DataDistance</listEntry>
             <listEntry value="7">@Strings.DataHRGraph</listEntry>
+            <listEntry value="8">@Strings.DataSolar</listEntry>
         </settingConfig>
     </setting>
 
@@ -56,6 +58,7 @@
             <listEntry value="5">@Strings.DataActiveMinutes</listEntry>
             <listEntry value="6">@Strings.DataDistance</listEntry>
             <listEntry value="7">@Strings.DataHRGraph</listEntry>
+            <listEntry value="8">@Strings.DataSolar</listEntry>
         </settingConfig>
     </setting>
 </settings>

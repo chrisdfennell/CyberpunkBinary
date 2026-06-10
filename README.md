@@ -23,6 +23,7 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
   - **MINS**: Weekly active minutes goal progress.
   - **DIST**: Distance traveled (auto-converts Kilometers/Miles).
   - **HR TREND**: A real-time heart rate graph (sparkline) plotting your last 20 readings.
+  - **SOLAR**: Solar charging intensity percentage (e.g., `85%`, falls back to `0%` on non-solar devices).
 
 ---
 
