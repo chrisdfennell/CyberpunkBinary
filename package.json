@@ -1,0 +1,11 @@
+{
+  "name": "cyberpunk-binary-watchface",
+  "version": "1.0.0",
+  "description": "Garmin Cyberpunk BCD & Pure Binary Watchface Simulator",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server -p 8081"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

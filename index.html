@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERPUNK BINARY - Garmin Watch Face Simulator</title>
+    <!-- Google Fonts: Rajdhani & Share Tech Mono for cyber HUD style -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Faint scanline overlay for screen effect -->
+    <div class="screen-scanlines"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div class="brand">
+                    <span class="neon-text-cyan">CYBERPUNK</span>
+                    <span class="neon-text-magenta">BINARY</span>
+                </div>
+                <p class="tagline">Garmin Watch Face Simulator & Builder</p>
+            </header>
+
+            <div class="control-sections-wrapper">
+                <!-- Preset Themes -->
+                <section class="control-section">
+                    <h3>Preset Neon Themes</h3>
+                    <div class="theme-grid">
+                        <button class="theme-btn active" data-theme="cyan" style="--accent: #00ffff; --glow: rgba(0, 255, 255, 0.2)">
+                            <span class="color-dot" style="background: #00ffff"></span> Cyber Cyan
+                        </button>
+                        <button class="theme-btn" data-theme="pink" style="--accent: #ff00ff; --glow: rgba(255, 0, 255, 0.2)">
+                            <span class="color-dot" style="background: #ff00ff"></span> Neon Pink
+                        </button>
+                        <button class="theme-btn" data-theme="green" style="--accent: #00ff00; --glow: rgba(0, 255, 0, 0.2)">
+                            <span class="color-dot" style="background: #00ff00"></span> Radioactive Green
+                        </button>
+                        <button class="theme-btn" data-theme="amber" style="--accent: #ff8800; --glow: rgba(255, 136, 0, 0.2)">
+                            <span class="color-dot" style="background: #ff8800"></span> Sci-Fi Amber
+                        </button>
+                        <button class="theme-btn" data-theme="slate" style="--accent: #ffffff; --glow: rgba(255, 255, 255, 0.2)">
+                            <span class="color-dot" style="background: #ffffff"></span> Monochrome Slate
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Grid Mode -->
+                <section class="control-section">
+                    <h3>Grid Configuration</h3>
+                    <div class="toggle-grid">
+                        <label class="toggle-control">
+                            <span>Grid Layout Mode</span>
+                            <select id="grid-mode-select">
+                                <option value="bcd" selected>Binary Coded Decimal (BCD)</option>
+                                <option value="pure">Pure Binary</option>
+                            </select>
+                        </label>
+                        <label class="toggle-control">
+                            <span>Always-On Display (AOD)</span>
+                            <input type="checkbox" id="aod-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <label class="toggle-control">
+                            <span>Show Seconds Column</span>
+                            <input type="checkbox" id="seconds-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <label class="toggle-control">
+                            <span>Show Digital Column Labels</span>
+                            <input type="checkbox" id="labels-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Customizable Slots -->
+                <section class="control-section">
+                    <h3>Customizable Slots</h3>
+                    <div class="slots-config">
+                        <div class="slot-item">
+                            <label>Left Stats Slot</label>
+                            <select id="slot-left">
+                                <option value="steps" selected>Steps</option>
+                                <option value="batt">Battery % or Days</option>
+                                <option value="hr">Heart Rate</option>
+                                <option value="weather">Weather Temp</option>
+                                <option value="cal">Calories</option>
+                                <option value="mins">Active Minutes</option>
+                                <option value="dist">Distance</option>
+                                <option value="graph">HR Graph Trend</option>
+                                <option value="solar">Solar Intensity</option>
+                            </select>
+                        </div>
+                        <div class="slot-item">
+                            <label>Center Stats Slot</label>
+                            <select id="slot-center">
+                                <option value="steps">Steps</option>
+                                <option value="batt" selected>Battery % or Days</option>
+                                <option value="hr">Heart Rate</option>
+                                <option value="weather">Weather Temp</option>
+                                <option value="cal">Calories</option>
+                                <option value="mins">Active Minutes</option>
+                                <option value="dist">Distance</option>
+                                <option value="graph">HR Graph Trend</option>
+                                <option value="solar">Solar Intensity</option>
+                            </select>
+                        </div>
+                        <div class="slot-item">
+                            <label>Right Stats Slot</label>
+                            <select id="slot-right">
+                                <option value="steps">Steps</option>
+                                <option value="batt">Battery % or Days</option>
+                                <option value="hr" selected>Heart Rate</option>
+                                <option value="weather">Weather Temp</option>
+                                <option value="cal">Calories</option>
+                                <option value="mins">Active Minutes</option>
+                                <option value="dist">Distance</option>
+                                <option value="graph">HR Graph Trend</option>
+                                <option value="solar">Solar Intensity</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Simulator Event Controllers -->
+                <section class="control-section">
+                    <h3>Simulation Event Triggers</h3>
+                    <div class="simulation-events">
+                        <button class="event-btn pulse-glow" id="trigger-hr">
+                            <span class="btn-icon">💓</span> Spike Heart Rate (Pulse)
+                        </button>
+                        <button class="event-btn pulse-glow" id="trigger-notify">
+                            <span class="btn-icon">🔔</span> Send Notification Alert
+                        </button>
+                        <label class="toggle-control">
+                            <span>Phone Bluetooth Connected</span>
+                            <input type="checkbox" id="phone-connected-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                        
+                        <div class="slider-control">
+                            <div class="slider-header">
+                                <span>Simulate Battery Level</span>
+                                <span id="batt-val">50%</span>
+                            </div>
+                            <input type="range" id="battery-slider" min="1" max="100" value="50">
+                        </div>
+
+                        <div class="slider-control">
+                            <div class="slider-header">
+                                <span>Simulate Steps</span>
+                                <span id="steps-val">0 / 10k</span>
+                            </div>
+                            <input type="range" id="steps-slider" min="0" max="15000" value="0">
+                        </div>
+
+                        <div class="slider-control">
+                            <div class="slider-header">
+                                <span>Simulate Solar Intensity</span>
+                                <span id="solar-val">50%</span>
+                            </div>
+                            <input type="range" id="solar-slider" min="0" max="100" value="50">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+
+        <!-- Watch Simulator Visual Area -->
+        <main class="simulator-view">
+            <!-- Simulated Garmin Watch Case -->
+            <div class="watch-hardware">
+                <!-- Garmin Bezel Accents / Screws -->
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+                
+                <!-- Buttons around Bezel -->
+                <button class="watch-btn btn-light" data-label="LIGHT"></button>
+                <button class="watch-btn btn-up" data-label="UP / MENU"></button>
+                <button class="watch-btn btn-down" data-label="DOWN"></button>
+                <button class="watch-btn btn-start" data-label="START / STOP"></button>
+                <button class="watch-btn btn-back" data-label="BACK / LAP"></button>
+
+                <!-- Inner Screen Bezel with Tachymeter/HUD grid -->
+                <div class="inner-bezel">
+                    <!-- Screen Glass Overlay -->
+                    <div class="glass-screen">
+                        <!-- Canvas drawing Watchface -->
+                        <canvas id="watch-canvas" width="400" height="400"></canvas>
+                        <!-- Grid lines to overlay watchface -->
+                        <div class="hud-overlay-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Watch Status Info Cards -->
+            <div class="watch-status-cards">
+                <div class="card card-neon-cyan">
+                    <span class="card-title">BLE LINK</span>
+                    <span class="card-val" id="ble-status-val">CONNECTED</span>
+                </div>
+                <div class="card card-neon-magenta">
+                    <span class="card-title">GRID MODE</span>
+                    <span class="card-val" id="grid-status-val">BCD</span>
+                </div>
+                <div class="card card-neon-green">
+                    <span class="card-title">AOD PROTECTION</span>
+                    <span class="card-val" id="aod-status-val">ACTIVE (STANDBY)</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Simulator Engine Script -->
+    <script src="app.js"></script>
+</body>
+</html>
