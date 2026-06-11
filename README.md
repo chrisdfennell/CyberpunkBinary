@@ -35,25 +35,28 @@ The grid is divided into columns representing the individual digits of Hours, Mi
 - Column 3 & 4: Minute Tens & Minute Ones
 - Column 5 & 6: Second Tens & Second Ones (active mode only)
 
-Each row represents a binary bit value (indicated on the left helper grid):
-- Row 4 (Bottom): **1**
+Each row represents a binary bit value, with a special '0' row at the bottom (indicated on the left helper grid):
+- Row 5 (Bottom): **0** (lights up when the column value is 0)
+- Row 4: **1**
 - Row 3: **2**
 - Row 2: **4**
 - Row 1 (Top): **8**
 
-Simply add the active glowing dots in each column to get the decimal digit! (e.g. if the Hour Ones column has the 4 and 2 dots lit up, the digit is 6).
+Simply add the active glowing dots in each column to get the decimal digit! (e.g. if the Hour Ones column has the 4 and 2 dots lit up, the digit is 6; if the column has only the 0 dot lit, the digit is 0). A hybrid digital clock readout is also displayed below the columns to assist with quick reading.
 
 ### Pure Binary Mode
 The grid is simplified into 3 columns: Hours, Minutes, and Seconds.
-Each row represents a binary bit value:
-- Row 6 (Bottom): **1**
+Each row represents a binary bit value, with a special '0' row at the bottom:
+- Row 7 (Bottom): **0** (lights up when the column value is 0)
+- Row 6: **1**
 - Row 5: **2**
 - Row 4: **4**
 - Row 3: **8**
 - Row 2: **16**
 - Row 1 (Top): **32**
 
-Simply add the active glowing dots in the column to get the total value (e.g. Hours = 16 + 4 = 20:00).
+Simply add the active glowing dots in the column to get the total value (e.g. Hours = 16 + 4 = 20:00; if a column value is 0, the 0 dot lights up).
+
 
 ---
 

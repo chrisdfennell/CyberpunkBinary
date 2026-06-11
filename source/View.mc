@@ -147,25 +147,25 @@ class BinaryWatchView extends WatchUi.WatchFace {
         }
         
         // Recalculate grid sizing metrics dynamically depending on grid mode
-        mDotRadius = (mScreenWidth * 0.025).toNumber();
+        mDotRadius = (mScreenWidth * 0.024).toNumber();
         if (mDotRadius < 6) { mDotRadius = 6; }
         
         if (mGridModeSetting == 1) {
-            // Pure Binary Mode (6 rows: 32 down to 1)
-            mRowSpacing = (mScreenHeight * 0.065).toNumber();
+            // Pure Binary Mode (7 rows: 32 down to 0)
+            mRowSpacing = (mScreenHeight * 0.055).toNumber();
             mColGap = (mScreenWidth * 0.12).toNumber();
             mGroupGap = (mScreenWidth * 0.15).toNumber();
             
-            var gridHeight = mRowSpacing * 5; // 6 rows (5 intervals)
-            mGridTop = mCenterY - (gridHeight / 2) + burnInY;
+            var gridHeight = mRowSpacing * 6; // 7 rows (6 intervals)
+            mGridTop = mCenterY - (gridHeight / 2) + burnInY - 10;
         } else {
-            // BCD Mode (4 rows: 8 down to 1)
-            mRowSpacing = (mScreenHeight * 0.085).toNumber();
+            // BCD Mode (5 rows: 8 down to 0)
+            mRowSpacing = (mScreenHeight * 0.072).toNumber();
             mColGap = (mScreenWidth * 0.075).toNumber();
             mGroupGap = (mScreenWidth * 0.13).toNumber();
             
-            var gridHeight = mRowSpacing * 3; // 4 rows (3 intervals)
-            mGridTop = mCenterY - (gridHeight / 2) + burnInY;
+            var gridHeight = mRowSpacing * 4; // 5 rows (4 intervals)
+            mGridTop = mCenterY - (gridHeight / 2) + burnInY - 10;
         }
         
         // Render binary grid
@@ -202,13 +202,13 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 colValues[2] = sec;
             }
             
-            var rowBits = [32, 16, 8, 4, 2, 1];
+            var rowBits = [32, 16, 8, 4, 2, 1, 0];
             
             // Draw left helper labels (only if burn-in protection is not active)
             if (!burnInActive) {
                 var labelX = colX[0] - (mGroupGap * 0.55).toNumber();
                 dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
-                for (var r = 0; r < 6; r++) {
+                for (var r = 0; r < 7; r++) {
                     var rowY = mGridTop + r * mRowSpacing;
                     dc.drawText(labelX, rowY - 8, Graphics.FONT_XTINY, rowBits[r].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 }
@@ -216,16 +216,42 @@ class BinaryWatchView extends WatchUi.WatchFace {
             
             for (var c = 0; c < numCols; c++) {
                 var val = colValues[c];
-                // Column 0 (Hours) only needs 5 rows (values 16, 8, 4, 2, 1) -> starts at row index 1
+                // Column 0 (Hours) only needs 6 rows (values 16, 8, 4, 2, 1, 0) -> starts at row index 1
                 var startRow = (c == 0) ? 1 : 0;
                 
-                for (var r = startRow; r < 6; r++) {
+                for (var r = startRow; r < 7; r++) {
                     var bit = rowBits[r];
-                    var isActive = (val & bit) != 0;
+                    var isActive = false;
+                    if (bit == 0) {
+                        isActive = (val == 0);
+                    } else {
+                        isActive = (val & bit) != 0;
+                    }
                     var x = colX[c];
                     var y = mGridTop + r * mRowSpacing;
                     
                     drawDot(dc, x, y, isActive, burnInActive);
+                }
+            }
+            
+            // Draw digital time helper values directly below the columns
+            if (!burnInActive) {
+                dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
+                var textY = mGridTop + 6 * mRowSpacing + (mRowSpacing * 0.75).toNumber();
+                for (var c = 0; c < numCols; c++) {
+                    var valStr = colValues[c].toString();
+                    if (c > 0 && colValues[c] < 10) {
+                        valStr = "0" + valStr;
+                    }
+                    dc.drawText(colX[c], textY - 8, Graphics.FONT_XTINY, valStr, Graphics.TEXT_JUSTIFY_CENTER);
+                }
+                
+                // Draw colons
+                var colonX = (colX[0] + colX[1]) / 2;
+                dc.drawText(colonX, textY - 10, Graphics.FONT_XTINY, ":", Graphics.TEXT_JUSTIFY_CENTER);
+                if (showSeconds) {
+                    var colonX2 = (colX[1] + colX[2]) / 2;
+                    dc.drawText(colonX2, textY - 10, Graphics.FONT_XTINY, ":", Graphics.TEXT_JUSTIFY_CENTER);
                 }
             }
         } else {
@@ -271,12 +297,12 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 colValues[5] = sOnes;
             }
             
-            var rowBits = [8, 4, 2, 1];
+            var rowBits = [8, 4, 2, 1, 0];
             
             if (!burnInActive) {
                 var labelX = colX[0] - mColGap;
                 dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
-                for (var r = 0; r < 4; r++) {
+                for (var r = 0; r < 5; r++) {
                     var rowY = mGridTop + r * mRowSpacing;
                     dc.drawText(labelX, rowY - 8, Graphics.FONT_XTINY, rowBits[r].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 }
@@ -286,18 +312,41 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 var val = colValues[c];
                 var colStartRow = 0;
                 if (c == 0) {
-                    colStartRow = 2; // Hour Tens has only 2 rows (bits 2, 1)
+                    colStartRow = 2; // Hour Tens has only 3 rows (bits 2, 1, 0)
                 } else if (c == 2 || c == 4) {
-                    colStartRow = 1; // Minute Tens and Second Tens have 3 rows (bits 4, 2, 1)
+                    colStartRow = 1; // Minute Tens and Second Tens have 4 rows (bits 4, 2, 1, 0)
                 }
                 
-                for (var r = colStartRow; r < 4; r++) {
+                for (var r = colStartRow; r < 5; r++) {
                     var bit = rowBits[r];
-                    var isActive = (val & bit) != 0;
+                    var isActive = false;
+                    if (bit == 0) {
+                        isActive = (val == 0);
+                    } else {
+                        isActive = (val & bit) != 0;
+                    }
                     var x = colX[c];
                     var y = mGridTop + r * mRowSpacing;
                     
                     drawDot(dc, x, y, isActive, burnInActive);
+                }
+            }
+            
+            // Draw digital time helper values directly below the columns
+            if (!burnInActive) {
+                dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
+                var textY = mGridTop + 4 * mRowSpacing + (mRowSpacing * 0.75).toNumber();
+                for (var c = 0; c < numCols; c++) {
+                    var digitStr = colValues[c].toString();
+                    dc.drawText(colX[c], textY - 8, Graphics.FONT_XTINY, digitStr, Graphics.TEXT_JUSTIFY_CENTER);
+                }
+                
+                // Draw colons between hours, minutes, and seconds
+                var colonX = (colX[1] + colX[2]) / 2;
+                dc.drawText(colonX, textY - 10, Graphics.FONT_XTINY, ":", Graphics.TEXT_JUSTIFY_CENTER);
+                if (showSeconds) {
+                    var colonX2 = (colX[3] + colX[4]) / 2;
+                    dc.drawText(colonX2, textY - 10, Graphics.FONT_XTINY, ":", Graphics.TEXT_JUSTIFY_CENTER);
                 }
             }
         }
@@ -516,7 +565,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
     }
 
     function drawStats(dc as Dc) as Void {
-        var statsY = (mScreenHeight * 0.82).toNumber();
+        var statsY = (mScreenHeight * 0.83).toNumber();
         
         var leftInfo = getDataFieldInfo(mDataLeftSetting);
         var centerInfo = getDataFieldInfo(mDataCenterSetting);
@@ -529,20 +578,21 @@ class BinaryWatchView extends WatchUi.WatchFace {
         var colSettings = [mDataLeftSetting, mDataCenterSetting, mDataRightSetting];
         
         var themeColor = mActiveColors[mColorThemeSetting];
+        var fontHeight = dc.getFontHeight(Graphics.FONT_XTINY);
         
         for (var i = 0; i < 3; i++) {
             var info = colInfos[i];
             var setting = colSettings[i];
             var cx = colX[i];
             
-            // Draw headers
+            // Draw headers (dynamic vertical shift based on font size)
             dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, statsY - 18, Graphics.FONT_XTINY, info[0], Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(cx, statsY - fontHeight + 2, Graphics.FONT_XTINY, info[0], Graphics.TEXT_JUSTIFY_CENTER);
             
             // Draw values
             if (setting == 7) {
                 // Draw Heart Rate Sparkline Graph instead of text
-                drawHRSparkline(dc, cx, statsY - 5);
+                drawHRSparkline(dc, cx, statsY + (fontHeight * 0.3).toNumber());
             } else if (setting == 1 && System.getSystemStats() has :solarIntensity) {
                 // If this is the battery slot and the watch has solar capability, draw battery and solar below it
                 var stats = System.getSystemStats();
@@ -550,7 +600,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
                 
                 // 1. Draw battery reading slightly shifted up
-                dc.drawText(cx, statsY - 9, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(cx, statsY - (fontHeight * 0.15).toNumber(), Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
                 
                 // 2. Draw solar intensity directly below it (shifted down to avoid overlap)
                 var solarVal = (stats.solarIntensity != null) ? stats.solarIntensity : 0;
@@ -561,16 +611,16 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 var textX = cx + 10;
                 
                 // Draw tiny sun icon (Cyberpunk orange/yellow)
-                drawTinySunIcon(dc, iconX, statsY + 19, 0xFFAA00);
+                drawTinySunIcon(dc, iconX, statsY + (fontHeight * 0.8).toNumber() + 7, 0xFFAA00);
                 
                 // Draw solar text
                 dc.setColor(0xA9B1D6, Graphics.COLOR_TRANSPARENT); // Dimmer blue-grey for secondary stats
-                dc.drawText(textX, statsY + 12, Graphics.FONT_XTINY, solarStr, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(textX, statsY + (fontHeight * 0.8).toNumber(), Graphics.FONT_XTINY, solarStr, Graphics.TEXT_JUSTIFY_CENTER);
             } else {
                 // Highlight middle slot, else print standard text
                 var textColor = (i == 1) ? themeColor : 0xCDD6F4;
                 dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx, statsY - 5, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(cx, statsY + 2, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
             }
         }
     }
