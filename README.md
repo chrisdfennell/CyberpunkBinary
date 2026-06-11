@@ -97,6 +97,7 @@ This repository contains a unified PowerShell script, `build.ps1`, to automate c
 ### Prerequisites
 1. **Garmin Connect IQ SDK**: Install the SDK Manager and download target SDKs.
 2. **Developer Key**: Place your signing key (`developer_key.der`) in the root directory.
+3. **Build Config**: Open and edit `build_config.json` (auto-generated on first run) to verify the paths to your local `JavaHome` and Garmin `SdkDir` match your system's setup.
 
 ### 1. Compile Watch Face
 Compile the binary for the default device (`fenix7`):
