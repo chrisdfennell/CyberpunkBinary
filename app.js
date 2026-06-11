@@ -45,7 +45,17 @@ document.addEventListener('DOMContentLoaded', () => {
         solar: 50,
         notifications: 2,
         phoneConnected: true,
-        hrHistory: [70, 71, 73, 72, 75, 76, 74, 72, 71, 73, 75, 78, 79, 74, 72]
+        hrHistory: [70, 71, 73, 72, 75, 76, 74, 72, 71, 73, 75, 78, 79, 74, 72],
+        floors: 8,
+        floorsGoal: 10,
+        activeMinsGoal: 150,
+        recovery: 18,
+        stress: 35,
+        bodyBattery: 78,
+        altitude: 1240,
+        baro: 1013,
+        alarms: 2,
+        respiration: 14
     };
 
     // AOD shift positions (to avoid burn in)
@@ -613,6 +623,18 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'dist': return { label: 'DIST', val: metrics.dist.toFixed(1) };
             case 'graph': return { label: 'HR TREND', val: 'GRAPH' };
             case 'solar': return { label: 'SOLAR', val: metrics.solar + '%' };
+            case 'stepGoalPct': return { label: 'STP%', val: Math.floor((metrics.steps / metrics.stepGoal) * 100) + '%' };
+            case 'floors': return { label: 'FLOORS', val: metrics.floors.toString() };
+            case 'floorsGoalPct': return { label: 'FLR%', val: Math.floor((metrics.floors / metrics.floorsGoal) * 100) + '%' };
+            case 'activeMinsPct': return { label: 'ACT%', val: Math.floor((metrics.mins / metrics.activeMinsGoal) * 100) + '%' };
+            case 'recovery': return { label: 'RECOV', val: metrics.recovery + 'h' };
+            case 'stress': return { label: 'STRESS', val: metrics.stress.toString() };
+            case 'bodyBattery': return { label: 'BODY', val: metrics.bodyBattery.toString() };
+            case 'altitude': return { label: 'ALT', val: metrics.altitude.toString() };
+            case 'baro': return { label: 'BARO', val: metrics.baro.toString() };
+            case 'alarms': return { label: 'ALARM', val: metrics.alarms.toString() };
+            case 'notifications': return { label: 'MSG', val: metrics.notifications.toString() };
+            case 'respiration': return { label: 'RESP', val: metrics.respiration.toString() };
             default: return { label: 'HUD', val: '--' };
         }
     }

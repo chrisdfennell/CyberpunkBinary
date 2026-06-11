@@ -31,6 +31,18 @@
             <listEntry value="6">@Strings.DataDistance</listEntry>
             <listEntry value="7">@Strings.DataHRGraph</listEntry>
             <listEntry value="8">@Strings.DataSolar</listEntry>
+            <listEntry value="9">@Strings.DataStepGoalPct</listEntry>
+            <listEntry value="10">@Strings.DataFloors</listEntry>
+            <listEntry value="11">@Strings.DataFloorsGoalPct</listEntry>
+            <listEntry value="12">@Strings.DataActiveMinsPct</listEntry>
+            <listEntry value="13">@Strings.DataRecovery</listEntry>
+            <listEntry value="14">@Strings.DataStress</listEntry>
+            <listEntry value="15">@Strings.DataBodyBattery</listEntry>
+            <listEntry value="16">@Strings.DataAltitude</listEntry>
+            <listEntry value="17">@Strings.DataBaro</listEntry>
+            <listEntry value="18">@Strings.DataAlarms</listEntry>
+            <listEntry value="19">@Strings.DataNotifications</listEntry>
+            <listEntry value="20">@Strings.DataRespiration</listEntry>
         </settingConfig>
     </setting>
 
@@ -45,6 +57,18 @@
             <listEntry value="6">@Strings.DataDistance</listEntry>
             <listEntry value="7">@Strings.DataHRGraph</listEntry>
             <listEntry value="8">@Strings.DataSolar</listEntry>
+            <listEntry value="9">@Strings.DataStepGoalPct</listEntry>
+            <listEntry value="10">@Strings.DataFloors</listEntry>
+            <listEntry value="11">@Strings.DataFloorsGoalPct</listEntry>
+            <listEntry value="12">@Strings.DataActiveMinsPct</listEntry>
+            <listEntry value="13">@Strings.DataRecovery</listEntry>
+            <listEntry value="14">@Strings.DataStress</listEntry>
+            <listEntry value="15">@Strings.DataBodyBattery</listEntry>
+            <listEntry value="16">@Strings.DataAltitude</listEntry>
+            <listEntry value="17">@Strings.DataBaro</listEntry>
+            <listEntry value="18">@Strings.DataAlarms</listEntry>
+            <listEntry value="19">@Strings.DataNotifications</listEntry>
+            <listEntry value="20">@Strings.DataRespiration</listEntry>
         </settingConfig>
     </setting>
 
@@ -59,6 +83,18 @@
             <listEntry value="6">@Strings.DataDistance</listEntry>
             <listEntry value="7">@Strings.DataHRGraph</listEntry>
             <listEntry value="8">@Strings.DataSolar</listEntry>
+            <listEntry value="9">@Strings.DataStepGoalPct</listEntry>
+            <listEntry value="10">@Strings.DataFloors</listEntry>
+            <listEntry value="11">@Strings.DataFloorsGoalPct</listEntry>
+            <listEntry value="12">@Strings.DataActiveMinsPct</listEntry>
+            <listEntry value="13">@Strings.DataRecovery</listEntry>
+            <listEntry value="14">@Strings.DataStress</listEntry>
+            <listEntry value="15">@Strings.DataBodyBattery</listEntry>
+            <listEntry value="16">@Strings.DataAltitude</listEntry>
+            <listEntry value="17">@Strings.DataBaro</listEntry>
+            <listEntry value="18">@Strings.DataAlarms</listEntry>
+            <listEntry value="19">@Strings.DataNotifications</listEntry>
+            <listEntry value="20">@Strings.DataRespiration</listEntry>
         </settingConfig>
     </setting>
 </settings>

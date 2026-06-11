@@ -30,4 +30,16 @@
     <string id="DataDistance">Distance</string>
     <string id="DataHRGraph">Heart Rate Graph</string>
     <string id="DataSolar">Solar Intensity</string>
+    <string id="DataStepGoalPct">Step Goal %</string>
+    <string id="DataFloors">Floors Climbed</string>
+    <string id="DataFloorsGoalPct">Floors Goal %</string>
+    <string id="DataActiveMinsPct">Active Mins %</string>
+    <string id="DataRecovery">Recovery Time</string>
+    <string id="DataStress">Stress Score</string>
+    <string id="DataBodyBattery">Body Battery</string>
+    <string id="DataAltitude">Altitude</string>
+    <string id="DataBaro">Barometric Pressure</string>
+    <string id="DataAlarms">Active Alarms</string>
+    <string id="DataNotifications">Notification Count</string>
+    <string id="DataRespiration">Respiration Rate</string>
 </strings>

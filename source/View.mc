@@ -82,7 +82,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
     }
 
     function clampDataFieldSetting(value as Number, fallback as Number) as Number {
-        if (value < 0 || value > 8) {
+        if (value < 0 || value > 20) {
             return fallback;
         }
 
@@ -559,6 +559,152 @@ class BinaryWatchView extends WatchUi.WatchFace {
             } else {
                 valStr = "0%";
             }
+        } else if (type == 9) {
+            // Step Goal Progress %
+            label = "STP%";
+            var steps = 0;
+            var goal = 10000;
+            var activityInfo = ActivityMonitor.getInfo();
+            if (activityInfo != null) {
+                if (activityInfo.steps != null) {
+                    steps = activityInfo.steps;
+                }
+                if (activityInfo.stepGoal != null && activityInfo.stepGoal > 0) {
+                    goal = activityInfo.stepGoal;
+                }
+            }
+            var progress = (steps.toFloat() / goal.toFloat() * 100).toNumber();
+            valStr = progress.toString() + "%";
+        } else if (type == 10) {
+            // Daily Floors Climbed
+            label = "FLOORS";
+            var floors = 0;
+            var activityInfo = ActivityMonitor.getInfo();
+            if (activityInfo != null && activityInfo.floorsClimbed != null) {
+                floors = activityInfo.floorsClimbed;
+            }
+            valStr = floors.toString();
+        } else if (type == 11) {
+            // Floors Goal Progress %
+            label = "FLR%";
+            var floors = 0;
+            var goal = 10;
+            var activityInfo = ActivityMonitor.getInfo();
+            if (activityInfo != null) {
+                if (activityInfo.floorsClimbed != null) {
+                    floors = activityInfo.floorsClimbed;
+                }
+                if (activityInfo.floorsClimbedGoal != null && activityInfo.floorsClimbedGoal > 0) {
+                    goal = activityInfo.floorsClimbedGoal;
+                }
+            }
+            var progress = (floors.toFloat() / goal.toFloat() * 100).toNumber();
+            valStr = progress.toString() + "%";
+        } else if (type == 12) {
+            // Weekly Active Minutes Progress %
+            label = "ACT%";
+            var mins = 0;
+            var goal = 150;
+            var activityInfo = ActivityMonitor.getInfo();
+            if (activityInfo != null) {
+                if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
+                    mins = activityInfo.activeMinutesDay.total;
+                } else if (activityInfo.activeMinutesWeek != null) {
+                    mins = activityInfo.activeMinutesWeek.total;
+                }
+                if (activityInfo has :activeMinutesWeekGoal && activityInfo.activeMinutesWeekGoal != null && activityInfo.activeMinutesWeekGoal > 0) {
+                    goal = activityInfo.activeMinutesWeekGoal;
+                }
+            }
+            var progress = (mins.toFloat() / goal.toFloat() * 100).toNumber();
+            valStr = progress.toString() + "%";
+        } else if (type == 13) {
+            // Recovery Time
+            label = "RECOV";
+            var recTime = 0;
+            var activityInfo = ActivityMonitor.getInfo();
+            if (activityInfo != null && activityInfo has :timeToRecovery && activityInfo.timeToRecovery != null) {
+                recTime = activityInfo.timeToRecovery;
+            }
+            valStr = recTime.toString() + "h";
+        } else if (type == 14) {
+            // Stress Score
+            label = "STRESS";
+            var stress = null;
+            if (Toybox has :SensorHistory && SensorHistory has :getStressHistory) {
+                var iter = SensorHistory.getStressHistory({ :period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST });
+                if (iter != null) {
+                    var sample = iter.next();
+                    if (sample != null && sample.data != null) {
+                        stress = sample.data;
+                    }
+                }
+            }
+            valStr = (stress != null) ? stress.toNumber().toString() : "--";
+        } else if (type == 15) {
+            // Body Battery
+            label = "BODY";
+            var body = null;
+            if (Toybox has :SensorHistory && SensorHistory has :getBodyBatteryHistory) {
+                var iter = SensorHistory.getBodyBatteryHistory({ :period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST });
+                if (iter != null) {
+                    var sample = iter.next();
+                    if (sample != null && sample.data != null) {
+                        body = sample.data;
+                    }
+                }
+            }
+            valStr = (body != null) ? body.toNumber().toString() : "--";
+        } else if (type == 16) {
+            // Altitude / Elevation
+            label = "ALT";
+            var altitude = null;
+            var actInfo = Activity.getActivityInfo();
+            if (actInfo != null && actInfo.altitude != null) {
+                altitude = actInfo.altitude; // meters
+                var settings = System.getDeviceSettings();
+                if (settings.elevationUnits == System.UNIT_STATUTE) {
+                    altitude = altitude * 3.28084; // meters to feet
+                }
+            }
+            valStr = (altitude != null) ? altitude.toNumber().toString() : "--";
+        } else if (type == 17) {
+            // Barometric Pressure
+            label = "BARO";
+            var pressure = null;
+            var actInfo = Activity.getActivityInfo();
+            if (actInfo != null && actInfo.ambientPressure != null) {
+                pressure = actInfo.ambientPressure; // Pascals
+                pressure = (pressure / 100.0); // Pascals to hPa (millibar)
+            }
+            valStr = (pressure != null) ? pressure.toNumber().toString() : "--";
+        } else if (type == 18) {
+            // Active Alarms
+            label = "ALARM";
+            var alarms = 0;
+            var settings = System.getDeviceSettings();
+            if (settings has :alarmCount && settings.alarmCount != null) {
+                alarms = settings.alarmCount;
+            }
+            valStr = alarms.toString();
+        } else if (type == 19) {
+            // Notification Count
+            label = "MSG";
+            var msgs = 0;
+            var settings = System.getDeviceSettings();
+            if (settings has :notificationCount && settings.notificationCount != null) {
+                msgs = settings.notificationCount;
+            }
+            valStr = msgs.toString();
+        } else if (type == 20) {
+            // Respiration Rate
+            label = "RESP";
+            var resp = null;
+            var activityInfo = ActivityMonitor.getInfo();
+            if (activityInfo != null && activityInfo has :respirationRate && activityInfo.respirationRate != null) {
+                resp = activityInfo.respirationRate;
+            }
+            valStr = (resp != null) ? resp.toString() : "--";
         }
         
         return [label, valStr];
