@@ -8,6 +8,9 @@
             <iq:product id="epix2"/>
             <iq:product id="fr965"/>
             <iq:product id="venu3"/>
+            <iq:product id="epix2pro51mm"/>
+            <iq:product id="fenix847mm"/>
+            <iq:product id="fenix8solar51mm"/>
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="SensorHistory"/>

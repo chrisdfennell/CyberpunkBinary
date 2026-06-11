@@ -63,6 +63,30 @@ class BinaryWatchView extends WatchUi.WatchFace {
         } catch (e) {
             // keep defaults in case of error
         }
+
+        sanitizeSettings();
+    }
+
+    function sanitizeSettings() as Void {
+        if (mColorThemeSetting < 0 || mColorThemeSetting >= mActiveColors.size()) {
+            mColorThemeSetting = 0;
+        }
+
+        if (mGridModeSetting < 0 || mGridModeSetting > 1) {
+            mGridModeSetting = 0;
+        }
+
+        mDataLeftSetting = clampDataFieldSetting(mDataLeftSetting, 0);
+        mDataCenterSetting = clampDataFieldSetting(mDataCenterSetting, 1);
+        mDataRightSetting = clampDataFieldSetting(mDataRightSetting, 2);
+    }
+
+    function clampDataFieldSetting(value as Number, fallback as Number) as Number {
+        if (value < 0 || value > 8) {
+            return fallback;
+        }
+
+        return value;
     }
 
     // Load your resources here
