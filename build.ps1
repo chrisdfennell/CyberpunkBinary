@@ -4,13 +4,28 @@ param(
     [switch]$Export
 )
 
+# Load local build configuration or create default if missing
+$configFile = Join-Path $PSScriptRoot "build_config.json"
+if (Test-Path $configFile) {
+    $config = Get-Content $configFile | ConvertFrom-Json
+    $JavaHome = $config.JavaHome
+    $SdkDir = $config.SdkDir
+} else {
+    $JavaHome = "C:\Program Files\Android\openjdk\jdk-21.0.8"
+    $SdkDir = "C:\Users\christopher.fennell\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b"
+    $configObj = [ordered]@{
+        JavaHome = $JavaHome
+        SdkDir = $SdkDir
+    }
+    $configObj | ConvertTo-Json | Out-File -Encoding utf8 $configFile
+}
+
 # 1. Setup Java Environment
-$env:JAVA_HOME = "C:\Program Files\Android\openjdk\jdk-21.0.8"
-$env:PATH = "C:\Program Files\Android\openjdk\jdk-21.0.8\bin;" + $env:PATH
+$env:JAVA_HOME = $JavaHome
+$env:PATH = (Join-Path $JavaHome "bin") + ";" + $env:PATH
 
 # 2. Define Garmin SDK Paths
-$sdkDir = "C:\Users\christopher.fennell\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b"
-$sdkBin = "$sdkDir\bin"
+$sdkBin = Join-Path $SdkDir "bin"
 
 # 3. Create output directory if it doesn't exist
 if (!(Test-Path -Path "bin")) {

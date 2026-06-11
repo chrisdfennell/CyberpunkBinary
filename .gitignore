@@ -25,3 +25,6 @@ Desktop.ini
 # Local/temporary script files
 compress.ps1
 *temp*
+
+# Local build configurations
+build_config.json
