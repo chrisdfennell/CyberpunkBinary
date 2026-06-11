@@ -14,16 +14,28 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
 - **Smart Status Badges**:
   - **Phone Connected**: A glowing cyan status dot appears to the left of the Date when connected to Bluetooth.
   - **Notifications**: An amber badge appears to the right of the Date showing your unread notification count.
-- **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone:
+- **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone. Supports 21 options:
   - **STEPS**: Current step count.
   - **BATT**: Estimated remaining battery life (displays in **days**, e.g., `12.5d`, where supported; falls back to `%` on older devices).
   - **HR**: Current Heart Rate.
   - **TEMP**: Live weather temperature (auto-converts Celsius/Fahrenheit).
   - **CAL**: Calories burned.
-  - **MINS**: Weekly active minutes goal progress.
+  - **MINS**: Weekly active minutes recorded.
   - **DIST**: Distance traveled (auto-converts Kilometers/Miles).
   - **HR TREND**: A real-time heart rate graph (sparkline) plotting your last 20 readings.
   - **SOLAR**: Solar charging intensity percentage (e.g., `85%`, falls back to `0%` on non-solar devices).
+  - **STP%**: Step goal progress percentage (e.g., `85%`).
+  - **FLOORS**: Daily floors climbed.
+  - **FLR%**: Daily floors goal progress percentage (e.g., `80%`).
+  - **ACT%**: Weekly active minutes goal progress percentage (e.g., `120%`).
+  - **RECOV**: Recovery time remaining in hours (e.g., `18h`).
+  - **STRESS**: Real-time stress score (1-100).
+  - **BODY**: Body Battery energy level (1-100).
+  - **ALT**: Altitude/Elevation (auto-converts feet/meters).
+  - **BARO**: Barometric pressure in hectopascals (hPa).
+  - **ALARM**: Number of active alarms set.
+  - **MSG**: Unread notification/message count.
+  - **RESP**: Respiration rate (breaths per minute).
 
 ---
 
