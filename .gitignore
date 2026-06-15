@@ -9,6 +9,9 @@ bin/
 *.key
 developer_key.der
 
+# Claude Code local settings
+.claude/
+
 # IDE and Editor local settings
 .vscode/tasks.json
 .vscode/launch.json
@@ -25,6 +28,11 @@ Desktop.ini
 # Local/temporary script files
 compress.ps1
 *temp*
+# The broad *temp* rule above also matches GitHub's *TEMPLATE* paths on
+# case-insensitive filesystems -- explicitly keep those tracked.
+!.github/PULL_REQUEST_TEMPLATE.md
+!.github/ISSUE_TEMPLATE/
+!.github/ISSUE_TEMPLATE/**
 
 # Local build configurations
 build_config.json

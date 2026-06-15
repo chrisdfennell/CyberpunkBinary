@@ -35,36 +35,70 @@ class BinaryWatchView extends WatchUi.WatchFace {
     private var mActiveColors = [0x00FFFF, 0xFF00FF, 0x00FF00, 0xFF8800, 0xFFFFFF];
     private var mGlowColors = [0x005555, 0x550055, 0x005500, 0x552200, 0x555555];
 
+    // Geometry cached from the last full onUpdate() so onPartialUpdate() can
+    // redraw just the seconds column(s) once per second in low-power mode,
+    // staying within the partial-update power budget.
+    private var mShowSecondsActive as Boolean = false;
+    private var mBurnInActive as Boolean = false;
+    private var mColX as Array<Number>?;
+    private var mDigitalTextY as Number = 0;
+    private var mXtinyHeight as Number = 0;
+    private var mSecClipX as Number = 0;
+    private var mSecClipY as Number = 0;
+    private var mSecClipW as Number = 0;
+    private var mSecClipH as Number = 0;
+
     function initialize() {
         WatchFace.initialize();
         updateSettings();
     }
 
     function updateSettings() as Void {
-        try {
-            if (Application has :Properties) {
-                mShowSecondsSetting = Application.Properties.getValue("ShowSeconds");
-                mColorThemeSetting = Application.Properties.getValue("ColorTheme");
-                mGridModeSetting = Application.Properties.getValue("GridMode");
-                mDataLeftSetting = Application.Properties.getValue("DataLeft");
-                mDataCenterSetting = Application.Properties.getValue("DataCenter");
-                mDataRightSetting = Application.Properties.getValue("DataRight");
-            } else {
-                var app = Application.getApp();
-                if (app != null) {
-                    mShowSecondsSetting = app.getProperty("ShowSeconds");
-                    mColorThemeSetting = app.getProperty("ColorTheme");
-                    mGridModeSetting = app.getProperty("GridMode");
-                    mDataLeftSetting = app.getProperty("DataLeft");
-                    mDataCenterSetting = app.getProperty("DataCenter");
-                    mDataRightSetting = app.getProperty("DataRight");
-                }
-            }
-        } catch (e) {
-            // keep defaults in case of error
-        }
+        // Read each property defensively. A missing/null/wrong-typed value
+        // falls back to its default instead of propagating null into
+        // sanitizeSettings() (which would crash on a null comparison).
+        mShowSecondsSetting = readBoolProperty("ShowSeconds", true);
+        mColorThemeSetting = readNumberProperty("ColorTheme", 0);
+        mGridModeSetting = readNumberProperty("GridMode", 0);
+        mDataLeftSetting = readNumberProperty("DataLeft", 0);
+        mDataCenterSetting = readNumberProperty("DataCenter", 1);
+        mDataRightSetting = readNumberProperty("DataRight", 2);
 
         sanitizeSettings();
+    }
+
+    private function getProperty(key as String) {
+        try {
+            if (Application has :Properties) {
+                return Application.Properties.getValue(key);
+            }
+            var app = Application.getApp();
+            if (app != null) {
+                return app.getProperty(key);
+            }
+        } catch (e) {
+            // fall through to null/default
+        }
+        return null;
+    }
+
+    private function readNumberProperty(key as String, fallback as Number) as Number {
+        var v = getProperty(key);
+        if (v instanceof Lang.Number) {
+            return v;
+        }
+        if (v instanceof Lang.Float || v instanceof Lang.Double) {
+            return v.toNumber();
+        }
+        return fallback;
+    }
+
+    private function readBoolProperty(key as String, fallback as Boolean) as Boolean {
+        var v = getProperty(key);
+        if (v instanceof Lang.Boolean) {
+            return v;
+        }
+        return fallback;
     }
 
     function sanitizeSettings() as Void {
@@ -106,12 +140,15 @@ class BinaryWatchView extends WatchUi.WatchFace {
 
     // Update the view
     function onUpdate(dc as Dc) as Void {
-        updateSettings();
-        
+        // Settings are loaded on launch (initialize), on show (onShow), and
+        // when the user changes them (App.onSettingsChanged) -- no need to
+        // re-read every frame.
+
         // Clear screen with deep dark blue/black background
         dc.setColor(0x0A0A0F, 0x0A0A0F);
         dc.clear();
-        
+        mXtinyHeight = dc.getFontHeight(Graphics.FONT_XTINY);
+
         var clockTime = System.getClockTime();
         var hour = clockTime.hour;
         var min = clockTime.min;
@@ -145,7 +182,8 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 burnInY = -3;
             }
         }
-        
+        mBurnInActive = burnInActive;
+
         // Recalculate grid sizing metrics dynamically depending on grid mode
         mDotRadius = (mScreenWidth * 0.024).toNumber();
         if (mDotRadius < 6) { mDotRadius = 6; }
@@ -171,17 +209,25 @@ class BinaryWatchView extends WatchUi.WatchFace {
         // Render binary grid
         drawBinaryGrid(dc, hour, min, sec, burnInActive, burnInX);
         
-        // Render Date & Status Indicators (only if burn-in protection is not active)
+        // Render Date & Status Indicators (only if burn-in protection is not active).
+        // Fetch each sensor source ONCE here and pass it down -- the helpers used
+        // to re-query these every call, which adds up on the per-second awake redraw.
         if (!burnInActive) {
-            drawDateAndStatus(dc);
-            drawBattery(dc);
-            drawStats(dc);
+            var systemStats = System.getSystemStats();
+            var monitorInfo = ActivityMonitor.getInfo();
+            var activityData = Activity.getActivityInfo();
+            drawDateAndStatus(dc, deviceSettings);
+            drawBattery(dc, systemStats, deviceSettings);
+            drawStats(dc, systemStats, monitorInfo, activityData, deviceSettings);
         }
     }
 
     function drawBinaryGrid(dc as Dc, hour as Number, min as Number, sec as Number, burnInActive as Boolean, burnInX as Number) as Void {
-        var showSeconds = !mIsSleep && mShowSecondsSetting;
-        
+        // Seconds are part of the layout whenever the user enabled them, even
+        // while asleep -- onPartialUpdate() keeps them ticking in low power.
+        var showSeconds = mShowSecondsSetting;
+        mShowSecondsActive = showSeconds;
+
         if (mGridModeSetting == 1) {
             // --- Pure Binary Mode (3 columns: Hours, Minutes, Seconds) ---
             var numCols = showSeconds ? 3 : 2;
@@ -253,6 +299,17 @@ class BinaryWatchView extends WatchUi.WatchFace {
                     var colonX2 = (colX[1] + colX[2]) / 2;
                     dc.drawText(colonX2, textY - 10, Graphics.FONT_XTINY, ":", Graphics.TEXT_JUSTIFY_CENTER);
                 }
+            }
+
+            // Cache seconds geometry for onPartialUpdate() (single seconds column).
+            if (showSeconds) {
+                mColX = colX;
+                var secTextY = mGridTop + 6 * mRowSpacing + (mRowSpacing * 0.75).toNumber();
+                mDigitalTextY = secTextY;
+                mSecClipX = colX[2] - mDotRadius - 3;
+                mSecClipW = (mDotRadius + 3) * 2;
+                mSecClipY = mGridTop - mDotRadius - 3;
+                mSecClipH = (secTextY + mXtinyHeight) - mSecClipY;
             }
         } else {
             // --- BCD Binary Mode (4 or 6 columns) ---
@@ -349,7 +406,85 @@ class BinaryWatchView extends WatchUi.WatchFace {
                     dc.drawText(colonX2, textY - 10, Graphics.FONT_XTINY, ":", Graphics.TEXT_JUSTIFY_CENTER);
                 }
             }
+
+            // Cache seconds geometry for onPartialUpdate() (sTens + sOnes columns).
+            if (showSeconds) {
+                mColX = colX;
+                var secTextY = mGridTop + 4 * mRowSpacing + (mRowSpacing * 0.75).toNumber();
+                mDigitalTextY = secTextY;
+                mSecClipX = colX[4] - mDotRadius - 3;
+                mSecClipW = (colX[5] + mDotRadius + 3) - mSecClipX;
+                mSecClipY = mGridTop - mDotRadius - 3;
+                mSecClipH = (secTextY + mXtinyHeight) - mSecClipY;
+            }
         }
+    }
+
+    // Redraws only the seconds column(s) using the geometry cached during the
+    // last full onUpdate(). Called from both onUpdate (implicitly, via the full
+    // grid) and onPartialUpdate (once per second in low-power mode).
+    function drawSecondsColumns(dc as Dc, sec as Number) as Void {
+        var colX = mColX;
+        if (colX == null) {
+            return;
+        }
+
+        if (mGridModeSetting == 1) {
+            // Pure binary: a single seconds column (index 2).
+            var rowBits = [32, 16, 8, 4, 2, 1, 0];
+            var x = colX[2];
+            for (var r = 0; r < 7; r++) {
+                var bit = rowBits[r];
+                var isActive = (bit == 0) ? (sec == 0) : ((sec & bit) != 0);
+                drawDot(dc, x, mGridTop + r * mRowSpacing, isActive, mBurnInActive);
+            }
+            if (!mBurnInActive) {
+                dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
+                var s = sec.toString();
+                if (sec < 10) { s = "0" + s; }
+                dc.drawText(x, mDigitalTextY - 8, Graphics.FONT_XTINY, s, Graphics.TEXT_JUSTIFY_CENTER);
+            }
+        } else {
+            // BCD: seconds tens (col 4) and ones (col 5).
+            var rowBits = [8, 4, 2, 1, 0];
+            var sTens = sec / 10;
+            var sOnes = sec % 10;
+            var cols = [colX[4], colX[5]];
+            var vals = [sTens, sOnes];
+            var starts = [1, 0]; // tens column starts one row lower (bits 4,2,1,0)
+            for (var c = 0; c < 2; c++) {
+                var val = vals[c];
+                for (var r = starts[c]; r < 5; r++) {
+                    var bit = rowBits[r];
+                    var isActive = (bit == 0) ? (val == 0) : ((val & bit) != 0);
+                    drawDot(dc, cols[c], mGridTop + r * mRowSpacing, isActive, mBurnInActive);
+                }
+            }
+            if (!mBurnInActive) {
+                dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(colX[4], mDigitalTextY - 8, Graphics.FONT_XTINY, sTens.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(colX[5], mDigitalTextY - 8, Graphics.FONT_XTINY, sOnes.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            }
+        }
+    }
+
+    // Low-power per-second tick: redraw just the seconds region so the seconds
+    // keep advancing in always-on mode without redrawing the whole face.
+    function onPartialUpdate(dc as Dc) as Void {
+        if (!mShowSecondsActive || mColX == null) {
+            return;
+        }
+
+        var sec = System.getClockTime().sec;
+
+        // Restrict drawing to the seconds region and repaint just that
+        // rectangle with the background color (avoid dc.clear(), which can
+        // reset the clip and wipe the whole screen), then redraw the seconds.
+        dc.setClip(mSecClipX, mSecClipY, mSecClipW, mSecClipH);
+        dc.setColor(0x0A0A0F, 0x0A0A0F);
+        dc.fillRectangle(mSecClipX, mSecClipY, mSecClipW, mSecClipH);
+        drawSecondsColumns(dc, sec);
+        dc.clearClip();
     }
 
     function drawDot(dc as Dc, x as Number, y as Number, isActive as Boolean, burnInActive as Boolean) as Void {
@@ -389,7 +524,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         }
     }
 
-    function drawDateAndStatus(dc as Dc) as Void {
+    function drawDateAndStatus(dc as Dc, devSettings) as Void {
         var info = Gregorian.info(Time.now(), Time.FORMAT_MEDIUM);
         var dateStr = Lang.format("$1$, $2$ $3$", [info.day_of_week.toUpper(), info.month.toUpper(), info.day]);
         
@@ -399,7 +534,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         
         // Get date string width to position side indicators
         var dateWidth = dc.getTextWidthInPixels(dateStr, Graphics.FONT_TINY);
-        var deviceSettings = System.getDeviceSettings();
+        var deviceSettings = devSettings;
         
         // 1. Phone Connection Status Indicator (Left of Date)
         var phoneX = mCenterX - (dateWidth / 2) - 16;
@@ -420,17 +555,18 @@ class BinaryWatchView extends WatchUi.WatchFace {
             dc.setColor(0xFF8800, Graphics.COLOR_TRANSPARENT); // Neon Amber orange badge
             dc.fillCircle(noteX, statusY, 5);
             
-            // Draw tiny count number
+            // Draw tiny count number (clamped so it stays inside the badge)
+            var noteStr = (noteCount > 9) ? "9+" : noteCount.toString();
             dc.setColor(0x000000, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(noteX, statusY - 6, Graphics.FONT_XTINY, noteCount.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(noteX, statusY - 6, Graphics.FONT_XTINY, noteStr, Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
 
-    function drawBattery(dc as Dc) as Void {
-        var stats = System.getSystemStats();
+    function drawBattery(dc as Dc, sysStats, devSettings) as Void {
+        var stats = sysStats;
         var battery = stats.battery;
-        
-        var isRound = System.getDeviceSettings().screenShape == System.SCREEN_SHAPE_ROUND;
+
+        var isRound = devSettings.screenShape == System.SCREEN_SHAPE_ROUND;
         
         var barColor = 0x00FF88; // Neon Green
         if (battery <= 20.0) {
@@ -471,7 +607,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         }
     }
 
-    function getDataFieldInfo(type as Number) as [String, String] {
+    function getDataFieldInfo(type as Number, sysStats, monInfo, activity, devSettings) as [String, String] {
         var label = "";
         var valStr = "--";
         
@@ -479,7 +615,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Steps
             label = "STEPS";
             var steps = 0;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null && activityInfo.steps != null) {
                 steps = activityInfo.steps;
             }
@@ -487,7 +623,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         } else if (type == 1) {
             // Battery
             label = "BATT";
-            var stats = System.getSystemStats();
+            var stats = sysStats;
             if (stats has :batteryInDays && stats.batteryInDays != null) {
                 valStr = stats.batteryInDays.format("%.1f") + "d";
             } else {
@@ -496,7 +632,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         } else if (type == 2) {
             // Heart Rate
             label = "HR";
-            var actInfo = Activity.getActivityInfo();
+            var actInfo = activity;
             if (actInfo != null && actInfo.currentHeartRate != null) {
                 valStr = actInfo.currentHeartRate.toString();
             }
@@ -507,7 +643,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 var cond = Weather.getCurrentConditions();
                 if (cond != null && cond.temperature != null) {
                     var temp = cond.temperature;
-                    var settings = System.getDeviceSettings();
+                    var settings = devSettings;
                     if (settings.temperatureUnits == System.UNIT_STATUTE) {
                         temp = (temp * 9.0 / 5.0) + 32.0;
                     }
@@ -517,14 +653,14 @@ class BinaryWatchView extends WatchUi.WatchFace {
         } else if (type == 4) {
             // Calories
             label = "CAL";
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null && activityInfo.calories != null) {
                 valStr = activityInfo.calories.toString();
             }
         } else if (type == 5) {
             // Active Minutes
             label = "MINS";
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null) {
                 var mins = 0;
                 if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
@@ -537,10 +673,10 @@ class BinaryWatchView extends WatchUi.WatchFace {
         } else if (type == 6) {
             // Distance
             label = "DIST";
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null && activityInfo.distance != null) {
                 var dist = activityInfo.distance / 100000.0; // cm to km
-                var settings = System.getDeviceSettings();
+                var settings = devSettings;
                 if (settings.distanceUnits == System.UNIT_STATUTE) {
                     dist = dist * 0.621371; // km to miles
                 }
@@ -553,7 +689,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         } else if (type == 8) {
             // Solar Charging Intensity
             label = "SOLAR";
-            var stats = System.getSystemStats();
+            var stats = sysStats;
             if (stats has :solarIntensity && stats.solarIntensity != null) {
                 valStr = stats.solarIntensity.toString() + "%";
             } else {
@@ -564,7 +700,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             label = "STP%";
             var steps = 0;
             var goal = 10000;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null) {
                 if (activityInfo.steps != null) {
                     steps = activityInfo.steps;
@@ -579,7 +715,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Daily Floors Climbed
             label = "FLOORS";
             var floors = 0;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null && activityInfo.floorsClimbed != null) {
                 floors = activityInfo.floorsClimbed;
             }
@@ -589,7 +725,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             label = "FLR%";
             var floors = 0;
             var goal = 10;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null) {
                 if (activityInfo.floorsClimbed != null) {
                     floors = activityInfo.floorsClimbed;
@@ -605,7 +741,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             label = "ACT%";
             var mins = 0;
             var goal = 150;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null) {
                 if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
                     mins = activityInfo.activeMinutesDay.total;
@@ -622,7 +758,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Recovery Time
             label = "RECOV";
             var recTime = 0;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null && activityInfo has :timeToRecovery && activityInfo.timeToRecovery != null) {
                 recTime = activityInfo.timeToRecovery;
             }
@@ -659,10 +795,10 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Altitude / Elevation
             label = "ALT";
             var altitude = null;
-            var actInfo = Activity.getActivityInfo();
+            var actInfo = activity;
             if (actInfo != null && actInfo.altitude != null) {
                 altitude = actInfo.altitude; // meters
-                var settings = System.getDeviceSettings();
+                var settings = devSettings;
                 if (settings.elevationUnits == System.UNIT_STATUTE) {
                     altitude = altitude * 3.28084; // meters to feet
                 }
@@ -672,7 +808,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Barometric Pressure
             label = "BARO";
             var pressure = null;
-            var actInfo = Activity.getActivityInfo();
+            var actInfo = activity;
             if (actInfo != null && actInfo.ambientPressure != null) {
                 pressure = actInfo.ambientPressure; // Pascals
                 pressure = (pressure / 100.0); // Pascals to hPa (millibar)
@@ -682,7 +818,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Active Alarms
             label = "ALARM";
             var alarms = 0;
-            var settings = System.getDeviceSettings();
+            var settings = devSettings;
             if (settings has :alarmCount && settings.alarmCount != null) {
                 alarms = settings.alarmCount;
             }
@@ -691,7 +827,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Notification Count
             label = "MSG";
             var msgs = 0;
-            var settings = System.getDeviceSettings();
+            var settings = devSettings;
             if (settings has :notificationCount && settings.notificationCount != null) {
                 msgs = settings.notificationCount;
             }
@@ -700,7 +836,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Respiration Rate
             label = "RESP";
             var resp = null;
-            var activityInfo = ActivityMonitor.getInfo();
+            var activityInfo = monInfo;
             if (activityInfo != null && activityInfo has :respirationRate && activityInfo.respirationRate != null) {
                 resp = activityInfo.respirationRate;
             }
@@ -710,12 +846,12 @@ class BinaryWatchView extends WatchUi.WatchFace {
         return [label, valStr];
     }
 
-    function drawStats(dc as Dc) as Void {
+    function drawStats(dc as Dc, sysStats, monInfo, activity, devSettings) as Void {
         var statsY = (mScreenHeight * 0.83).toNumber();
-        
-        var leftInfo = getDataFieldInfo(mDataLeftSetting);
-        var centerInfo = getDataFieldInfo(mDataCenterSetting);
-        var rightInfo = getDataFieldInfo(mDataRightSetting);
+
+        var leftInfo = getDataFieldInfo(mDataLeftSetting, sysStats, monInfo, activity, devSettings);
+        var centerInfo = getDataFieldInfo(mDataCenterSetting, sysStats, monInfo, activity, devSettings);
+        var rightInfo = getDataFieldInfo(mDataRightSetting, sysStats, monInfo, activity, devSettings);
         
         // Center coordinates of the three columns
         var offset = (mScreenWidth * 0.26).toNumber();
@@ -738,10 +874,10 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Draw values
             if (setting == 7) {
                 // Draw Heart Rate Sparkline Graph instead of text
-                drawHRSparkline(dc, cx, statsY + (fontHeight * 0.3).toNumber());
-            } else if (setting == 1 && System.getSystemStats() has :solarIntensity) {
+                drawHRSparkline(dc, cx, statsY + (fontHeight * 0.3).toNumber(), activity);
+            } else if (setting == 1 && sysStats has :solarIntensity) {
                 // If this is the battery slot and the watch has solar capability, draw battery and solar below it
-                var stats = System.getSystemStats();
+                var stats = sysStats;
                 var textColor = (i == 1) ? themeColor : 0xCDD6F4;
                 dc.setColor(textColor, Graphics.COLOR_TRANSPARENT);
                 
@@ -771,7 +907,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         }
     }
 
-    function drawHRSparkline(dc as Dc, slotX as Number, slotY as Number) as Void {
+    function drawHRSparkline(dc as Dc, slotX as Number, slotY as Number, activity) as Void {
         var graphWidth = 54;
         var graphHeight = 13;
         var xStart = slotX - (graphWidth / 2);
@@ -785,7 +921,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         
         // Fallback HR current value if history is not available
         var currentHR = null;
-        var actInfo = Activity.getActivityInfo();
+        var actInfo = activity;
         if (actInfo != null && actInfo.currentHeartRate != null) {
             currentHR = actInfo.currentHeartRate;
         }

@@ -2,6 +2,8 @@
 
 A premium, highly customizable, and visually stunning BCD and Pure Binary watch face for Garmin smartwatches. Designed for high contrast and visual depth, it features realistic glowing neon orbs with 3D glass reflections, making it perfect for both MIP (memory-in-pixel) and AMOLED screens.
 
+**▶ [Try the live simulator](https://chrisdfennell.github.io/CyberpunkBinary/)** — runs in your browser, no watch required.
+
 ![Cyberpunk Binary Watch Simulator Screenshot](garmin_binary_watch_screenshot.png)
 
 ## Features

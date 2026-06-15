@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let showLabels = true;
     let gridMode = 'bcd'; // 'bcd' or 'pure'
     let freezeTime = false;
+    let use24Hour = false;
 
     // Slot settings (Left, Center, Right)
     const slots = {
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondsToggle = document.getElementById('seconds-toggle');
     const labelsToggle = document.getElementById('labels-toggle');
     const freezeToggle = document.getElementById('freeze-toggle');
+    const hour24Toggle = document.getElementById('hour24-toggle');
 
     const slotLeftSelect = document.getElementById('slot-left');
     const slotCenterSelect = document.getElementById('slot-center');
@@ -114,13 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isAOD = e.target.checked;
         aodStatusVal.textContent = isAOD ? "ACTIVE (AOD ACTIVE)" : "ACTIVE (STANDBY)";
         aodStatusVal.parentElement.style.borderBottomColor = isAOD ? "#ff00ff" : "#00ff00";
-        if (isAOD) {
-            aodShiftX = Math.random() > 0.5 ? 3 : -3;
-            aodShiftY = Math.random() > 0.5 ? 3 : -3;
-        } else {
-            aodShiftX = 0;
-            aodShiftY = 0;
-        }
+        // The actual shift is computed per-frame in draw() so it cycles with
+        // the clock, matching View.mc's burn-in protection.
     });
 
     secondsToggle.addEventListener('change', (e) => {
@@ -133,6 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     freezeToggle.addEventListener('change', (e) => {
         freezeTime = e.target.checked;
+    });
+
+    hour24Toggle.addEventListener('change', (e) => {
+        use24Hour = e.target.checked;
     });
 
     slotLeftSelect.addEventListener('change', (e) => { slots.left = e.target.value; });
@@ -212,12 +213,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const min = freezeTime ? 0 : now.getMinutes();
         const sec = freezeTime ? 0 : now.getSeconds();
 
-        // 12h format calculation
+        // Honor the 12/24-hour setting, mirroring View.mc's is24Hour handling.
         let displayHour = hour;
-        // In this simulation we will mirror the 12-hour / 24-hour setting
-        // Let's assume 12-hour format is active for visual parity (since 10:26 looks great)
-        displayHour = displayHour % 12;
-        if (displayHour === 0) displayHour = 12;
+        if (!use24Hour) {
+            displayHour = displayHour % 12;
+            if (displayHour === 0) displayHour = 12;
+        }
+
+        // AOD anti-burn-in shift: cycle through 4 positions per minute, matching
+        // View.mc (0,0)/(3,3)/(-3,3)/(3,-3) for shift = minute % 4.
+        if (isAOD) {
+            const shift = min % 4;
+            aodShiftX = (shift === 2) ? -3 : (shift === 0 ? 0 : 3);
+            aodShiftY = (shift === 3) ? -3 : (shift === 0 ? 0 : 3);
+        } else {
+            aodShiftX = 0;
+            aodShiftY = 0;
+        }
 
         // Render battery arc along the top (Only in active mode)
         if (!isAOD) {
@@ -260,12 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Grid Drawing Utilities ---
     function drawBCDGrid(hour, min, sec, gridTop, rowSpacing, colGap, groupGap, dotRadius, isAOD) {
         const numCols = showSeconds ? 6 : 4;
-        const hTens = Math.floor(hour / 10);
-        const hOnes = hour % 10;
-        const mTens = Math.floor(min / 10);
-        const mOnes = min % 10;
-        const sTens = Math.floor(sec / 10);
-        const sOnes = sec % 10;
+        // Shared encoding (binary.js) decides which dots are lit; this function
+        // only handles geometry. Keeps the sim in lockstep with View.mc.
+        const columns = BinaryClock.bcdColumns(hour, min, sec, showSeconds);
 
         let totalWidth;
         if (!showSeconds) {
@@ -290,8 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
             colX[5] = colX[4] + colGap;
         }
 
-        const colValues = [hTens, hOnes, mTens, mOnes, sTens, sOnes];
-        const rowBits = [8, 4, 2, 1, 0];
+        const colValues = columns.map((col) => col.value);
+        const rowBits = BinaryClock.BCD_ROW_BITS;
 
         // Draw left helper labels
         if (!isAOD) {
@@ -308,26 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Draw dots
         for (let c = 0; c < numCols; c++) {
-            const val = colValues[c];
-            let colStartRow = 0;
-            if (c === 0) {
-                colStartRow = 2; // Hour Tens has only 3 rows (bits 2, 1, 0)
-            } else if (c === 2 || c === 4) {
-                colStartRow = 1; // Minute Tens & Second Tens have 4 rows (bits 4, 2, 1, 0)
-            }
-
-            for (let r = colStartRow; r < 5; r++) {
-                const bit = rowBits[r];
-                let isActive = false;
-                if (bit === 0) {
-                    isActive = (val === 0);
-                } else {
-                    isActive = (val & bit) !== 0;
-                }
+            const col = columns[c];
+            for (let r = col.startRow; r < 5; r++) {
                 const x = colX[c];
                 const y = gridTop + r * rowSpacing;
-
-                drawDot(ctx, x, y, isActive, dotRadius, isAOD);
+                drawDot(ctx, x, y, col.rows[r].active, dotRadius, isAOD);
             }
         }
 
@@ -364,8 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
             colX[2] = colX[1] + groupGap;
         }
 
-        const colValues = [hour, min, sec];
-        const rowBits = [32, 16, 8, 4, 2, 1, 0];
+        const columns = BinaryClock.pureColumns(hour, min, sec, showSeconds);
+        const colValues = columns.map((col) => col.value);
+        const rowBits = BinaryClock.PURE_ROW_BITS;
 
         // Draw left helper labels
         if (!isAOD) {
@@ -382,22 +377,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Draw dots
         for (let c = 0; c < numCols; c++) {
-            const val = colValues[c];
-            // Column 0 (Hours) only needs 6 rows (values 16 down to 0) -> starts at row index 1
-            const startRow = (c === 0) ? 1 : 0;
-
-            for (let r = startRow; r < 7; r++) {
-                const bit = rowBits[r];
-                let isActive = false;
-                if (bit === 0) {
-                    isActive = (val === 0);
-                } else {
-                    isActive = (val & bit) !== 0;
-                }
+            const col = columns[c];
+            for (let r = col.startRow; r < 7; r++) {
                 const x = colX[c];
                 const y = gridTop + r * rowSpacing;
-
-                drawDot(ctx, x, y, isActive, dotRadius, isAOD);
+                drawDot(ctx, x, y, col.rows[r].active, dotRadius, isAOD);
             }
         }
 
@@ -537,10 +521,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.arc(noteX, dateY, 5, 0, Math.PI * 2);
             ctx.fill();
 
-            // Draw small number
+            // Draw small number (clamped so it stays inside the badge)
             ctx.fillStyle = '#000000';
             ctx.font = "9px 'Share Tech Mono'";
-            ctx.fillText(metrics.notifications.toString(), noteX, dateY);
+            const noteStr = metrics.notifications > 9 ? '9+' : metrics.notifications.toString();
+            ctx.fillText(noteStr, noteX, dateY);
         }
     }
 
@@ -662,8 +647,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const range = (max - min) || 10;
         const step = w / (metrics.hrHistory.length - 1);
 
+        // hrHistory is ordered oldest -> newest, so draw left -> right to
+        // match the device (View.mc), which puts the newest sample on the right.
         metrics.hrHistory.forEach((val, index) => {
-            const px = xStart + w - (index * step);
+            const px = xStart + (index * step);
             const py = yStart + h - ((val - min) / range * h);
             if (index === 0) ctx.moveTo(px, py);
             else ctx.lineTo(px, py);
