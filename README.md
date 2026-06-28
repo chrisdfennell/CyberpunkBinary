@@ -4,7 +4,7 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
 
 **▶ [Try the live simulator](https://chrisdfennell.github.io/CyberpunkBinary/)** — runs in your browser, no watch required.
 
-![Cyberpunk Binary Watch Simulator Screenshot](garmin_binary_watch_screenshot.png)
+![Cyberpunk Binary Watch Simulator Screenshot](assets/screen_active.png)
 
 ## Features
 
@@ -16,7 +16,8 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
 - **Smart Status Badges**:
   - **Phone Connected**: A glowing cyan status dot appears to the left of the Date when connected to Bluetooth.
   - **Notifications**: An amber badge appears to the right of the Date showing your unread notification count.
-- **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone. Supports 21 options:
+- **Hideable Data Fields**: Turn the entire bottom stats row off with the **Show Data Fields** toggle for a minimal, time-only face. Each slot can also be hidden individually with the **None / Hidden** option for an asymmetric layout.
+- **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone. Supports 21 data options (plus **None / Hidden** to leave a slot blank):
   - **STEPS**: Current step count.
   - **BATT**: Estimated remaining battery life (displays in **days**, e.g., `12.5d`, where supported; falls back to `%` on older devices).
   - **HR**: Current Heart Rate.
@@ -38,6 +39,7 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
   - **ALARM**: Number of active alarms set.
   - **MSG**: Unread notification/message count.
   - **RESP**: Respiration rate (breaths per minute).
+  - **None / Hidden**: Leaves the slot empty.
 
 ---
 

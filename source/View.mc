@@ -25,6 +25,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
     
     // Configurable Settings (with defaults)
     private var mShowSecondsSetting as Boolean = true;
+    private var mShowDataFieldsSetting as Boolean = true;
     private var mColorThemeSetting as Number = 0;
     private var mGridModeSetting as Number = 0;     // 0 = BCD, 1 = Pure Binary
     private var mDataLeftSetting as Number = 0;     // Default: Steps
@@ -58,6 +59,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         // falls back to its default instead of propagating null into
         // sanitizeSettings() (which would crash on a null comparison).
         mShowSecondsSetting = readBoolProperty("ShowSeconds", true);
+        mShowDataFieldsSetting = readBoolProperty("ShowDataFields", true);
         mColorThemeSetting = readNumberProperty("ColorTheme", 0);
         mGridModeSetting = readNumberProperty("GridMode", 0);
         mDataLeftSetting = readNumberProperty("DataLeft", 0);
@@ -116,7 +118,8 @@ class BinaryWatchView extends WatchUi.WatchFace {
     }
 
     function clampDataFieldSetting(value as Number, fallback as Number) as Number {
-        if (value < 0 || value > 20) {
+        // 0-20 are real data sources; 21 = "None" (slot hidden).
+        if (value < 0 || value > 21) {
             return fallback;
         }
 
@@ -218,7 +221,11 @@ class BinaryWatchView extends WatchUi.WatchFace {
             var activityData = Activity.getActivityInfo();
             drawDateAndStatus(dc, deviceSettings);
             drawBattery(dc, systemStats, deviceSettings);
-            drawStats(dc, systemStats, monitorInfo, activityData, deviceSettings);
+            // Master toggle hides the entire bottom data row; individual slots
+            // can also be hidden via the per-slot "None" option (handled in drawStats).
+            if (mShowDataFieldsSetting) {
+                drawStats(dc, systemStats, monitorInfo, activityData, deviceSettings);
+            }
         }
     }
 
@@ -548,17 +555,29 @@ class BinaryWatchView extends WatchUi.WatchFace {
             dc.drawCircle(phoneX, statusY, 4);
         }
         
-        // 2. Notification Badge Indicator (Right of Date)
+        // 2. Notification Badge Indicator (Right of Date). Size the badge to the
+        // count text so the digits never spill outside it -- a fixed r=5 circle
+        // was far too small for the XTINY glyphs.
         var noteCount = deviceSettings.notificationCount;
         if (noteCount > 0) {
-            var noteX = mCenterX + (dateWidth / 2) + 16;
-            dc.setColor(0xFF8800, Graphics.COLOR_TRANSPARENT); // Neon Amber orange badge
-            dc.fillCircle(noteX, statusY, 5);
-            
-            // Draw tiny count number (clamped so it stays inside the badge)
             var noteStr = (noteCount > 9) ? "9+" : noteCount.toString();
+            var badgeTextH = dc.getFontHeight(Graphics.FONT_XTINY);
+            var badgeTextW = dc.getTextWidthInPixels(noteStr, Graphics.FONT_XTINY);
+            var badgeR = (badgeTextH / 2) + 1;
+            var noteX = mCenterX + (dateWidth / 2) + 8 + badgeR;
+
+            dc.setColor(0xFF8800, Graphics.COLOR_TRANSPARENT); // Neon Amber orange badge
+            if (badgeTextW + 4 > badgeR * 2) {
+                // Wider than tall (e.g. "9+") -> draw a rounded pill instead.
+                var pillHalfW = (badgeTextW / 2) + 3;
+                dc.fillRoundedRectangle(noteX - pillHalfW, statusY - badgeR, pillHalfW * 2, badgeR * 2, badgeR);
+            } else {
+                dc.fillCircle(noteX, statusY, badgeR);
+            }
+
+            // Vertically center the count within the badge.
             dc.setColor(0x000000, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(noteX, statusY - 6, Graphics.FONT_XTINY, noteStr, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(noteX, statusY - (badgeTextH / 2), Graphics.FONT_XTINY, noteStr, Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
 
@@ -658,15 +677,15 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 valStr = activityInfo.calories.toString();
             }
         } else if (type == 5) {
-            // Active Minutes
+            // Active Minutes (weekly, to match the "MINS" label and README).
             label = "MINS";
             var activityInfo = monInfo;
             if (activityInfo != null) {
                 var mins = 0;
-                if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
-                    mins = activityInfo.activeMinutesDay.total;
-                } else if (activityInfo.activeMinutesWeek != null) {
+                if (activityInfo.activeMinutesWeek != null) {
                     mins = activityInfo.activeMinutesWeek.total;
+                } else if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
+                    mins = activityInfo.activeMinutesDay.total;
                 }
                 valStr = mins.toString();
             }
@@ -743,10 +762,11 @@ class BinaryWatchView extends WatchUi.WatchFace {
             var goal = 150;
             var activityInfo = monInfo;
             if (activityInfo != null) {
-                if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
-                    mins = activityInfo.activeMinutesDay.total;
-                } else if (activityInfo.activeMinutesWeek != null) {
+                // Use weekly minutes so the numerator matches the weekly goal.
+                if (activityInfo.activeMinutesWeek != null) {
                     mins = activityInfo.activeMinutesWeek.total;
+                } else if (activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
+                    mins = activityInfo.activeMinutesDay.total;
                 }
                 if (activityInfo has :activeMinutesWeekGoal && activityInfo.activeMinutesWeekGoal != null && activityInfo.activeMinutesWeekGoal > 0) {
                     goal = activityInfo.activeMinutesWeekGoal;
@@ -795,25 +815,50 @@ class BinaryWatchView extends WatchUi.WatchFace {
             // Altitude / Elevation
             label = "ALT";
             var altitude = null;
+            // Activity.altitude is usually only populated during a recorded
+            // activity, so read the elevation sensor history first.
+            if (Toybox has :SensorHistory && SensorHistory has :getElevationHistory) {
+                var iter = SensorHistory.getElevationHistory({ :period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST });
+                if (iter != null) {
+                    var sample = iter.next();
+                    if (sample != null && sample.data != null) {
+                        altitude = sample.data; // meters
+                    }
+                }
+            }
             var actInfo = activity;
-            if (actInfo != null && actInfo.altitude != null) {
+            if (altitude == null && actInfo != null && actInfo.altitude != null) {
                 altitude = actInfo.altitude; // meters
+            }
+            if (altitude != null) {
                 var settings = devSettings;
                 if (settings.elevationUnits == System.UNIT_STATUTE) {
                     altitude = altitude * 3.28084; // meters to feet
                 }
+                valStr = altitude.toNumber().toString();
             }
-            valStr = (altitude != null) ? altitude.toNumber().toString() : "--";
         } else if (type == 17) {
             // Barometric Pressure
             label = "BARO";
             var pressure = null;
-            var actInfo = activity;
-            if (actInfo != null && actInfo.ambientPressure != null) {
-                pressure = actInfo.ambientPressure; // Pascals
-                pressure = (pressure / 100.0); // Pascals to hPa (millibar)
+            // Prefer the pressure sensor history; Activity.ambientPressure is
+            // typically only populated during a recorded activity.
+            if (Toybox has :SensorHistory && SensorHistory has :getPressureHistory) {
+                var iter = SensorHistory.getPressureHistory({ :period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST });
+                if (iter != null) {
+                    var sample = iter.next();
+                    if (sample != null && sample.data != null) {
+                        pressure = sample.data; // Pascals
+                    }
+                }
             }
-            valStr = (pressure != null) ? pressure.toNumber().toString() : "--";
+            var actInfo = activity;
+            if (pressure == null && actInfo != null && actInfo.ambientPressure != null) {
+                pressure = actInfo.ambientPressure; // Pascals
+            }
+            if (pressure != null) {
+                valStr = (pressure / 100.0).toNumber().toString(); // Pascals to hPa
+            }
         } else if (type == 18) {
             // Active Alarms
             label = "ALARM";
@@ -866,7 +911,12 @@ class BinaryWatchView extends WatchUi.WatchFace {
             var info = colInfos[i];
             var setting = colSettings[i];
             var cx = colX[i];
-            
+
+            // "None" (21) -> leave this slot blank (no header, no value).
+            if (setting == 21) {
+                continue;
+            }
+
             // Draw headers (dynamic vertical shift based on font size)
             dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, statsY - fontHeight + 2, Graphics.FONT_XTINY, info[0], Graphics.TEXT_JUSTIFY_CENTER);
