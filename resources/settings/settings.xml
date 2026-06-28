@@ -3,6 +3,10 @@
         <settingConfig type="boolean" />
     </setting>
 
+    <setting propertyKey="@Properties.ShowDataFields" title="@Strings.ShowDataFieldsTitle" prompt="@Strings.ShowDataFieldsTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
     <setting propertyKey="@Properties.GridMode" title="@Strings.GridModeTitle" prompt="@Strings.GridModeTitle">
         <settingConfig type="list">
             <listEntry value="0">@Strings.GridModeBCD</listEntry>
@@ -43,6 +47,7 @@
             <listEntry value="18">@Strings.DataAlarms</listEntry>
             <listEntry value="19">@Strings.DataNotifications</listEntry>
             <listEntry value="20">@Strings.DataRespiration</listEntry>
+            <listEntry value="21">@Strings.DataNone</listEntry>
         </settingConfig>
     </setting>
 
@@ -69,6 +74,7 @@
             <listEntry value="18">@Strings.DataAlarms</listEntry>
             <listEntry value="19">@Strings.DataNotifications</listEntry>
             <listEntry value="20">@Strings.DataRespiration</listEntry>
+            <listEntry value="21">@Strings.DataNone</listEntry>
         </settingConfig>
     </setting>
 
@@ -95,6 +101,7 @@
             <listEntry value="18">@Strings.DataAlarms</listEntry>
             <listEntry value="19">@Strings.DataNotifications</listEntry>
             <listEntry value="20">@Strings.DataRespiration</listEntry>
+            <listEntry value="21">@Strings.DataNone</listEntry>
         </settingConfig>
     </setting>
 </settings>

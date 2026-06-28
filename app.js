@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAOD = false;
     let showSeconds = true;
     let showLabels = true;
+    let showDataFields = true;
     let gridMode = 'bcd'; // 'bcd' or 'pure'
     let freezeTime = false;
     let use24Hour = false;
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const aodToggle = document.getElementById('aod-toggle');
     const secondsToggle = document.getElementById('seconds-toggle');
     const labelsToggle = document.getElementById('labels-toggle');
+    const dataFieldsToggle = document.getElementById('data-fields-toggle');
     const freezeToggle = document.getElementById('freeze-toggle');
     const hour24Toggle = document.getElementById('hour24-toggle');
 
@@ -126,6 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     labelsToggle.addEventListener('change', (e) => {
         showLabels = e.target.checked;
+    });
+
+    dataFieldsToggle.addEventListener('change', (e) => {
+        showDataFields = e.target.checked;
     });
 
     freezeToggle.addEventListener('change', (e) => {
@@ -263,7 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render stats & date overlay (only if not AOD)
         if (!isAOD) {
             drawDateAndStatus(ctx, now);
-            drawStats(ctx);
+            // Master toggle hides the whole bottom data row; per-slot "None"
+            // is handled inside drawStats (mirrors View.mc).
+            if (showDataFields) {
+                drawStats(ctx);
+            }
         }
 
         requestAnimationFrame(draw);
@@ -513,18 +523,32 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
         }
 
-        // Notification count badge
+        // Notification count badge. Size the badge to the count text so the
+        // digits never overflow it (mirrors View.mc drawDateAndStatus).
         if (metrics.notifications > 0) {
-            const noteX = 200 + (textWidth / 2) + 16;
-            ctx.fillStyle = '#ff8800';
-            ctx.beginPath();
-            ctx.arc(noteX, dateY, 5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Draw small number (clamped so it stays inside the badge)
-            ctx.fillStyle = '#000000';
-            ctx.font = "9px 'Share Tech Mono'";
             const noteStr = metrics.notifications > 9 ? '9+' : metrics.notifications.toString();
+            ctx.font = "11px 'Share Tech Mono'";
+            const noteTextW = ctx.measureText(noteStr).width;
+            const badgeR = 8;
+            const noteX = 200 + (textWidth / 2) + 8 + badgeR;
+
+            ctx.fillStyle = '#ff8800';
+            if (noteTextW + 4 > badgeR * 2) {
+                // Wider than tall (e.g. "9+") -> rounded pill.
+                const pillHalfW = (noteTextW / 2) + 3;
+                ctx.beginPath();
+                ctx.roundRect(noteX - pillHalfW, dateY - badgeR, pillHalfW * 2, badgeR * 2, badgeR);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(noteX, dateY, badgeR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Centered count
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.fillText(noteStr, noteX, dateY);
         }
     }
@@ -541,6 +565,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const slotKey = i === 0 ? 'left' : (i === 1 ? 'center' : 'right');
             const type = slots[slotKey];
             const cx = colX[i];
+
+            // "None" -> leave this slot blank (no header, no value).
+            if (type === 'none') {
+                continue;
+            }
 
             const details = getMetricDetails(type);
 

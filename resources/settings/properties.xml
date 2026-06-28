@@ -1,5 +1,6 @@
 <properties>
     <property id="ShowSeconds" type="boolean">true</property>
+    <property id="ShowDataFields" type="boolean">true</property>
     <property id="ColorTheme" type="number">0</property>
     <property id="GridMode" type="number">0</property>
     <property id="DataLeft" type="number">0</property>
