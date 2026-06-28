@@ -57,7 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
         altitude: 1240,
         baro: 1013,
         alarms: 2,
-        respiration: 14
+        respiration: 14,
+        feelsLike: 70,
+        humidity: 54,
+        wind: 8,
+        precip: 20,
+        spo2: 97,
+        moveBar: 1,
+        intensityDay: 34,
+        // Sunrise/sunset are mocked as static strings in the simulator; the
+        // device computes them from GPS + date (View.mc sunEventString).
+        sunrise: '5:34',
+        sunset: '20:58'
     };
 
     // AOD shift positions (to avoid burn in)
@@ -655,8 +666,27 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'alarms': return { label: 'ALARM', val: metrics.alarms.toString() };
             case 'notifications': return { label: 'MSG', val: metrics.notifications.toString() };
             case 'respiration': return { label: 'RESP', val: metrics.respiration.toString() };
+            case 'feelsLike': return { label: 'FEELS', val: metrics.feelsLike + '°' };
+            case 'humidity': return { label: 'HUM', val: metrics.humidity + '%' };
+            case 'wind': return { label: 'WIND', val: metrics.wind.toString() };
+            case 'precip': return { label: 'RAIN', val: metrics.precip + '%' };
+            case 'spo2': return { label: 'SPO2', val: metrics.spo2 + '%' };
+            case 'moveBar': return { label: 'MOVE', val: metrics.moveBar.toString() };
+            case 'intensity': return { label: 'INTEN', val: metrics.intensityDay.toString() };
+            case 'week': return { label: 'WEEK', val: isoWeekNumber(new Date()).toString() };
+            case 'sunrise': return { label: 'RISE', val: metrics.sunrise };
+            case 'sunset': return { label: 'SET', val: metrics.sunset };
             default: return { label: 'HUD', val: '--' };
         }
+    }
+
+    // ISO-8601 week number — mirrors View.mc isoWeekNumber() for the WEEK slot.
+    function isoWeekNumber(date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const dayNum = (d.getUTCDay() + 6) % 7; // Mon=0 .. Sun=6
+        d.setUTCDate(d.getUTCDate() - dayNum + 3); // shift to the week's Thursday
+        const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+        return 1 + Math.round((d - firstThursday) / (7 * 86400000));
     }
 
     function drawHRSparklineCanvas(ctx, slotX, slotY) {

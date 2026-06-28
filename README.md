@@ -17,7 +17,7 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
   - **Phone Connected**: A glowing cyan status dot appears to the left of the Date when connected to Bluetooth.
   - **Notifications**: An amber badge appears to the right of the Date showing your unread notification count.
 - **Hideable Data Fields**: Turn the entire bottom stats row off with the **Show Data Fields** toggle for a minimal, time-only face. Each slot can also be hidden individually with the **None / Hidden** option — the remaining fields automatically re-center so there's never a gap.
-- **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone. Supports 21 data options (plus **None / Hidden** to leave a slot blank):
+- **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone. Supports 31 data options (plus **None / Hidden** to leave a slot blank):
   - **STEPS**: Current step count.
   - **BATT**: Estimated remaining battery life (displays in **days**, e.g., `12.5d`, where supported; falls back to `%` on older devices).
   - **HR**: Current Heart Rate.
@@ -39,6 +39,16 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
   - **ALARM**: Number of active alarms set.
   - **MSG**: Unread notification/message count.
   - **RESP**: Respiration rate (breaths per minute).
+  - **FEELS**: Feels-like (apparent) temperature (auto-converts Celsius/Fahrenheit).
+  - **HUM**: Relative humidity percentage.
+  - **WIND**: Wind speed (auto-converts km/h or mph).
+  - **RAIN**: Precipitation chance percentage.
+  - **SPO2**: Pulse Ox / blood oxygen saturation (Pulse-Ox capable devices; `--` otherwise).
+  - **MOVE**: Move bar / inactivity level.
+  - **INTEN**: Intensity minutes earned today.
+  - **WEEK**: ISO-8601 week number of the year.
+  - **RISE**: Sunrise time (requires a GPS fix; `--` until located).
+  - **SET**: Sunset time (requires a GPS fix; `--` until located).
   - **None / Hidden**: Leaves the slot empty.
 
 ---

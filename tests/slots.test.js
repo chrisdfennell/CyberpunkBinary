@@ -86,9 +86,13 @@ function optionsFor(selectId) {
 
 console.log('slots.js structure');
 
-test('ids are 0..N-1, contiguous and unique', function () {
+test('ids form a unique, contiguous set 0..N-1', function () {
+    // Array/dropdown order is intentionally NOT id order (the "None" sentinel
+    // keeps id 21 but renders last), so check the id SET rather than positions.
     const ids = SLOTS.map(function (s) { return s.id; });
-    assert.deepStrictEqual(ids, ids.map(function (_, i) { return i; }));
+    assert.strictEqual(new Set(ids).size, ids.length, 'duplicate id');
+    const sorted = ids.slice().sort(function (a, b) { return a - b; });
+    assert.deepStrictEqual(sorted, sorted.map(function (_, i) { return i; }));
 });
 
 test('keys and stringIds are unique', function () {
@@ -174,10 +178,12 @@ test('getDataFieldInfo defines every real header', function () {
     });
 });
 
-test('clamp range and None skip cover the NONE_ID sentinel', function () {
-    // The clamp must admit NONE_ID, and drawStats must skip it.
-    assert(viewMc.indexOf('value > ' + NONE_ID) !== -1,
-        'View.mc clampDataFieldSetting should allow up to NONE_ID (' + NONE_ID + ')');
+test('clamp range admits every id and None skip covers the sentinel', function () {
+    // The clamp must admit the full id range (highest id), and drawStats must
+    // skip the NONE_ID slot.
+    const maxId = SLOTS.reduce(function (m, s) { return Math.max(m, s.id); }, 0);
+    assert(viewMc.indexOf('value > ' + maxId) !== -1,
+        'View.mc clampDataFieldSetting should allow up to the max id (' + maxId + ')');
     assert(viewMc.indexOf('!= ' + NONE_ID) !== -1,
         'View.mc drawStats should filter out the NONE_ID slot');
 });
