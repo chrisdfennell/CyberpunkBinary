@@ -557,19 +557,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawStats(ctx) {
         const statsY = 332;
         const offset = 104;
-        const colX = [200 - offset, 200, 200 + offset];
         const activeTheme = themes[currentTheme];
         const fontHeight = 18;
 
-        for (let i = 0; i < 3; i++) {
-            const slotKey = i === 0 ? 'left' : (i === 1 ? 'center' : 'right');
-            const type = slots[slotKey];
-            const cx = colX[i];
+        // Lay out only the visible slots so a "None" slot doesn't leave a gap --
+        // the rest are spread evenly and stay centered (mirrors View.mc). The
+        // configured center slot (logical index 1) keeps its highlight wherever
+        // it lands.
+        const slotKeys = ['left', 'center', 'right'];
+        const visible = [0, 1, 2].filter((i) => slots[slotKeys[i]] !== 'none');
+        const n = visible.length;
+        if (n === 0) {
+            return;
+        }
+        const leftX = 200 - ((n - 1) * offset) / 2;
 
-            // "None" -> leave this slot blank (no header, no value).
-            if (type === 'none') {
-                continue;
-            }
+        for (let j = 0; j < n; j++) {
+            const i = visible[j];               // logical slot id (0/1/2) for styling
+            const type = slots[slotKeys[i]];
+            const cx = leftX + j * offset;
 
             const details = getMetricDetails(type);
 
