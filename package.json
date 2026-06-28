@@ -6,7 +6,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "npx http-server -p 8081",
-    "test": "node tests/binary.test.js"
+    "test": "node tests/binary.test.js && node tests/slots.test.js"
   },
   "dependencies": {},
   "devDependencies": {}
