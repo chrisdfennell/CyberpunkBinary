@@ -16,7 +16,7 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
 - **Smart Status Badges**:
   - **Phone Connected**: A glowing cyan status dot appears to the left of the Date when connected to Bluetooth.
   - **Notifications**: An amber badge appears to the right of the Date showing your unread notification count.
-- **Hideable Data Fields**: Turn the entire bottom stats row off with the **Show Data Fields** toggle for a minimal, time-only face. Each slot can also be hidden individually with the **None / Hidden** option for an asymmetric layout.
+- **Hideable Data Fields**: Turn the entire bottom stats row off with the **Show Data Fields** toggle for a minimal, time-only face. Each slot can also be hidden individually with the **None / Hidden** option — the remaining fields automatically re-center so there's never a gap.
 - **Customizable Dashboard Slots**: Configure the three bottom stats fields dynamically from your phone. Supports 21 data options (plus **None / Hidden** to leave a slot blank):
   - **STEPS**: Current step count.
   - **BATT**: Estimated remaining battery life (displays in **days**, e.g., `12.5d`, where supported; falls back to `%` on older devices).

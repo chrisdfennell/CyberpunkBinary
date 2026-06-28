@@ -894,28 +894,35 @@ class BinaryWatchView extends WatchUi.WatchFace {
     function drawStats(dc as Dc, sysStats, monInfo, activity, devSettings) as Void {
         var statsY = (mScreenHeight * 0.83).toNumber();
 
-        var leftInfo = getDataFieldInfo(mDataLeftSetting, sysStats, monInfo, activity, devSettings);
-        var centerInfo = getDataFieldInfo(mDataCenterSetting, sysStats, monInfo, activity, devSettings);
-        var rightInfo = getDataFieldInfo(mDataRightSetting, sysStats, monInfo, activity, devSettings);
-        
-        // Center coordinates of the three columns
-        var offset = (mScreenWidth * 0.26).toNumber();
-        var colX = [mCenterX - offset, mCenterX, mCenterX + offset];
-        var colInfos = [leftInfo, centerInfo, rightInfo];
         var colSettings = [mDataLeftSetting, mDataCenterSetting, mDataRightSetting];
-        
+
+        // Lay out only the visible slots so a "None" (21) slot doesn't leave a
+        // gap -- the remaining fields are spread evenly and stay centered. The
+        // configured Center slot (logical index 1) keeps its theme highlight
+        // wherever it lands.
+        var visible = [] as Array<Number>;
+        for (var k = 0; k < 3; k++) {
+            if (colSettings[k] != 21) {
+                visible.add(k);
+            }
+        }
+        var n = visible.size();
+        if (n == 0) {
+            return;
+        }
+
+        // Fixed gap between adjacent fields; n fields span (n-1)*offset, centered.
+        var offset = (mScreenWidth * 0.26).toNumber();
+        var leftX = mCenterX - (((n - 1) * offset) / 2);
+
         var themeColor = mActiveColors[mColorThemeSetting];
         var fontHeight = dc.getFontHeight(Graphics.FONT_XTINY);
-        
-        for (var i = 0; i < 3; i++) {
-            var info = colInfos[i];
-            var setting = colSettings[i];
-            var cx = colX[i];
 
-            // "None" (21) -> leave this slot blank (no header, no value).
-            if (setting == 21) {
-                continue;
-            }
+        for (var j = 0; j < n; j++) {
+            var i = visible[j];                 // logical slot id (0/1/2) for styling
+            var setting = colSettings[i];
+            var cx = leftX + j * offset;
+            var info = getDataFieldInfo(setting, sysStats, monInfo, activity, devSettings);
 
             // Draw headers (dynamic vertical shift based on font size)
             dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
