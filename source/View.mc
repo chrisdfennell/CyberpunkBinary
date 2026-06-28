@@ -9,6 +9,8 @@ import Toybox.Activity;
 import Toybox.Application;
 import Toybox.Weather;
 import Toybox.SensorHistory;
+import Toybox.Position;
+import Toybox.Math;
 
 class BinaryWatchView extends WatchUi.WatchFace {
 
@@ -118,8 +120,8 @@ class BinaryWatchView extends WatchUi.WatchFace {
     }
 
     function clampDataFieldSetting(value as Number, fallback as Number) as Number {
-        // 0-20 are real data sources; 21 = "None" (slot hidden).
-        if (value < 0 || value > 21) {
+        // 0-20 and 22-31 are real data sources; 21 = "None" (slot hidden).
+        if (value < 0 || value > 31) {
             return fallback;
         }
 
@@ -886,9 +888,205 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 resp = activityInfo.respirationRate;
             }
             valStr = (resp != null) ? resp.toString() : "--";
+        } else if (type == 22) {
+            // Feels-Like Temperature
+            label = "FEELS";
+            if (Toybox has :Weather) {
+                var cond = Weather.getCurrentConditions();
+                if (cond != null && cond has :feelsLikeTemperature && cond.feelsLikeTemperature != null) {
+                    var temp = cond.feelsLikeTemperature;
+                    if (devSettings.temperatureUnits == System.UNIT_STATUTE) {
+                        temp = (temp * 9.0 / 5.0) + 32.0;
+                    }
+                    valStr = temp.toNumber().toString() + "°";
+                }
+            }
+        } else if (type == 23) {
+            // Relative Humidity
+            label = "HUM";
+            if (Toybox has :Weather) {
+                var cond = Weather.getCurrentConditions();
+                if (cond != null && cond has :relativeHumidity && cond.relativeHumidity != null) {
+                    valStr = cond.relativeHumidity.toString() + "%";
+                }
+            }
+        } else if (type == 24) {
+            // Wind Speed (Weather gives m/s; convert to mph or km/h)
+            label = "WIND";
+            if (Toybox has :Weather) {
+                var cond = Weather.getCurrentConditions();
+                if (cond != null && cond has :windSpeed && cond.windSpeed != null) {
+                    var spd = cond.windSpeed;
+                    if (devSettings.distanceUnits == System.UNIT_STATUTE) {
+                        spd = spd * 2.23694; // m/s to mph
+                    } else {
+                        spd = spd * 3.6; // m/s to km/h
+                    }
+                    valStr = spd.toNumber().toString();
+                }
+            }
+        } else if (type == 25) {
+            // Precipitation Chance
+            label = "RAIN";
+            if (Toybox has :Weather) {
+                var cond = Weather.getCurrentConditions();
+                if (cond != null && cond has :precipitationChance && cond.precipitationChance != null) {
+                    valStr = cond.precipitationChance.toString() + "%";
+                }
+            }
+        } else if (type == 26) {
+            // Pulse Ox / Blood Oxygen (SpO2)
+            label = "SPO2";
+            var spo2 = null;
+            if (Toybox has :SensorHistory && SensorHistory has :getOxygenSaturationHistory) {
+                var iter = SensorHistory.getOxygenSaturationHistory({ :period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST });
+                if (iter != null) {
+                    var sample = iter.next();
+                    if (sample != null && sample.data != null) {
+                        spo2 = sample.data;
+                    }
+                }
+            }
+            valStr = (spo2 != null) ? spo2.toNumber().toString() + "%" : "--";
+        } else if (type == 27) {
+            // Move Bar / inactivity level
+            label = "MOVE";
+            var activityInfo = monInfo;
+            if (activityInfo != null && activityInfo has :moveBarLevel && activityInfo.moveBarLevel != null) {
+                valStr = activityInfo.moveBarLevel.toString();
+            } else {
+                valStr = "0";
+            }
+        } else if (type == 28) {
+            // Intensity Minutes earned today
+            label = "INTEN";
+            var activityInfo = monInfo;
+            if (activityInfo != null && activityInfo has :activeMinutesDay && activityInfo.activeMinutesDay != null) {
+                valStr = activityInfo.activeMinutesDay.total.toString();
+            }
+        } else if (type == 29) {
+            // ISO Week Number
+            label = "WEEK";
+            valStr = isoWeekNumber().toString();
+        } else if (type == 30) {
+            // Sunrise time (needs a GPS fix; "--" until then)
+            label = "RISE";
+            valStr = sunEventString(devSettings, true);
+        } else if (type == 31) {
+            // Sunset time (needs a GPS fix; "--" until then)
+            label = "SET";
+            valStr = sunEventString(devSettings, false);
         }
-        
+
         return [label, valStr];
+    }
+
+    // --- Helpers for the date/astro data fields ---------------------------
+
+    private function secondsPerDay() as Number { return 86400; }
+
+    // ISO-8601 week number (weeks start Monday; week 1 holds the first
+    // Thursday of the year). Approximate at the year boundaries, which is fine
+    // for a glanceable readout.
+    private function isoWeekNumber() as Number {
+        var now = Time.now();
+        var info = Gregorian.info(now, Time.FORMAT_SHORT);
+        var jan1 = Gregorian.moment({ :year => info.year, :month => 1, :day => 1, :hour => 0, :minute => 0, :second => 0 });
+        var dayOfYear = ((now.value() - jan1.value()) / secondsPerDay()).toNumber() + 1;
+        // Gregorian day_of_week is 1=Sunday..7=Saturday; ISO wants Mon=1..Sun=7.
+        var isoDow = (info.day_of_week == 1) ? 7 : info.day_of_week - 1;
+        var week = (dayOfYear - isoDow + 10) / 7;
+        if (week < 1) {
+            week = 52; // rolls into the last week of the previous year
+        } else if (week > 52) {
+            week = 53;
+        }
+        return week;
+    }
+
+    // Degree-based trig wrappers (Toybox.Math works in radians).
+    private function dsin(d) { return Math.sin(Math.toRadians(d)); }
+    private function dcos(d) { return Math.cos(Math.toRadians(d)); }
+    private function dtan(d) { return Math.tan(Math.toRadians(d)); }
+    private function dasin(x) { return Math.toDegrees(Math.asin(x)); }
+    private function dacos(x) { return Math.toDegrees(Math.acos(x)); }
+    private function datan(x) { return Math.toDegrees(Math.atan(x)); }
+
+    private function normDeg(d) {
+        while (d < 0.0) { d += 360.0; }
+        while (d >= 360.0) { d -= 360.0; }
+        return d;
+    }
+    private function normHours(h) {
+        while (h < 0.0) { h += 24.0; }
+        while (h >= 24.0) { h -= 24.0; }
+        return h;
+    }
+    private function twoDigits(n as Number) as String {
+        return (n < 10) ? "0" + n.toString() : n.toString();
+    }
+
+    // Sunrise/sunset using the standard sunrise equation (Almanac for
+    // Computers). Needs a location fix from Position; returns "--" until one is
+    // available or when the sun doesn't rise/set that day at this latitude.
+    private function sunEventString(devSettings, isSunrise as Boolean) as String {
+        var posInfo = Position.getInfo();
+        if (posInfo == null || posInfo.position == null) {
+            return "--";
+        }
+        var loc = posInfo.position.toDegrees();
+        var lat = loc[0];
+        var lon = loc[1];
+        if (lat == 0.0 && lon == 0.0) {
+            return "--"; // no real fix yet (default 0,0)
+        }
+
+        var now = Time.now();
+        var info = Gregorian.info(now, Time.FORMAT_SHORT);
+        var jan1 = Gregorian.moment({ :year => info.year, :month => 1, :day => 1, :hour => 0, :minute => 0, :second => 0 });
+        var n = ((now.value() - jan1.value()) / secondsPerDay()).toNumber() + 1;
+
+        var lngHour = lon / 15.0;
+        var t = isSunrise ? (n + ((6.0 - lngHour) / 24.0)) : (n + ((18.0 - lngHour) / 24.0));
+
+        var m = (0.9856 * t) - 3.289;
+        var l = normDeg(m + (1.916 * dsin(m)) + (0.020 * dsin(2.0 * m)) + 282.634);
+
+        var ra = normDeg(datan(0.91764 * dtan(l)));
+        // Put right ascension in the same quadrant as the sun's longitude.
+        var lQuad = Math.floor(l / 90.0) * 90.0;
+        var raQuad = Math.floor(ra / 90.0) * 90.0;
+        ra = (ra + (lQuad - raQuad)) / 15.0;
+
+        var sinDec = 0.39782 * dsin(l);
+        var cosDec = dcos(dasin(sinDec));
+
+        var zenith = 90.833; // official sunrise/sunset incl. refraction
+        var cosH = (dcos(zenith) - (sinDec * dsin(lat))) / (cosDec * dcos(lat));
+        if (cosH > 1.0 || cosH < -1.0) {
+            return "--"; // sun never rises / never sets here today
+        }
+
+        var h = (isSunrise ? (360.0 - dacos(cosH)) : dacos(cosH)) / 15.0;
+        var localMeanT = h + ra - (0.06571 * t) - 6.622;
+        var ut = normHours(localMeanT - lngHour);
+
+        var tzHours = System.getClockTime().timeZoneOffset / 3600.0;
+        var localT = normHours(ut + tzHours);
+
+        var hh = Math.floor(localT).toNumber();
+        var mm = Math.round((localT - hh) * 60.0).toNumber();
+        if (mm >= 60) {
+            mm = 0;
+            hh = (hh + 1) % 24;
+        }
+
+        if (!devSettings.is24Hour) {
+            var h12 = hh % 12;
+            if (h12 == 0) { h12 = 12; }
+            return h12.toString() + ":" + twoDigits(mm);
+        }
+        return hh.toString() + ":" + twoDigits(mm);
     }
 
     function drawStats(dc as Dc, sysStats, monInfo, activity, devSettings) as Void {

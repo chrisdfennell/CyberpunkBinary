@@ -44,4 +44,16 @@
     <string id="DataAlarms">Active Alarms</string>
     <string id="DataNotifications">Notification Count</string>
     <string id="DataRespiration">Respiration Rate</string>
+
+    <!-- Data Field Values (added after v1.3.0) -->
+    <string id="DataFeelsLike">Feels-Like Temp</string>
+    <string id="DataHumidity">Humidity</string>
+    <string id="DataWind">Wind Speed</string>
+    <string id="DataPrecip">Precipitation Chance</string>
+    <string id="DataSpo2">Pulse Ox (SpO2)</string>
+    <string id="DataMoveBar">Move Bar</string>
+    <string id="DataIntensity">Intensity Mins (Today)</string>
+    <string id="DataWeek">Week Number</string>
+    <string id="DataSunrise">Sunrise</string>
+    <string id="DataSunset">Sunset</string>
 </strings>

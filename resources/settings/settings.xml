@@ -47,6 +47,16 @@
             <listEntry value="18">@Strings.DataAlarms</listEntry>
             <listEntry value="19">@Strings.DataNotifications</listEntry>
             <listEntry value="20">@Strings.DataRespiration</listEntry>
+            <listEntry value="22">@Strings.DataFeelsLike</listEntry>
+            <listEntry value="23">@Strings.DataHumidity</listEntry>
+            <listEntry value="24">@Strings.DataWind</listEntry>
+            <listEntry value="25">@Strings.DataPrecip</listEntry>
+            <listEntry value="26">@Strings.DataSpo2</listEntry>
+            <listEntry value="27">@Strings.DataMoveBar</listEntry>
+            <listEntry value="28">@Strings.DataIntensity</listEntry>
+            <listEntry value="29">@Strings.DataWeek</listEntry>
+            <listEntry value="30">@Strings.DataSunrise</listEntry>
+            <listEntry value="31">@Strings.DataSunset</listEntry>
             <listEntry value="21">@Strings.DataNone</listEntry>
         </settingConfig>
     </setting>
@@ -74,6 +84,16 @@
             <listEntry value="18">@Strings.DataAlarms</listEntry>
             <listEntry value="19">@Strings.DataNotifications</listEntry>
             <listEntry value="20">@Strings.DataRespiration</listEntry>
+            <listEntry value="22">@Strings.DataFeelsLike</listEntry>
+            <listEntry value="23">@Strings.DataHumidity</listEntry>
+            <listEntry value="24">@Strings.DataWind</listEntry>
+            <listEntry value="25">@Strings.DataPrecip</listEntry>
+            <listEntry value="26">@Strings.DataSpo2</listEntry>
+            <listEntry value="27">@Strings.DataMoveBar</listEntry>
+            <listEntry value="28">@Strings.DataIntensity</listEntry>
+            <listEntry value="29">@Strings.DataWeek</listEntry>
+            <listEntry value="30">@Strings.DataSunrise</listEntry>
+            <listEntry value="31">@Strings.DataSunset</listEntry>
             <listEntry value="21">@Strings.DataNone</listEntry>
         </settingConfig>
     </setting>
@@ -101,6 +121,16 @@
             <listEntry value="18">@Strings.DataAlarms</listEntry>
             <listEntry value="19">@Strings.DataNotifications</listEntry>
             <listEntry value="20">@Strings.DataRespiration</listEntry>
+            <listEntry value="22">@Strings.DataFeelsLike</listEntry>
+            <listEntry value="23">@Strings.DataHumidity</listEntry>
+            <listEntry value="24">@Strings.DataWind</listEntry>
+            <listEntry value="25">@Strings.DataPrecip</listEntry>
+            <listEntry value="26">@Strings.DataSpo2</listEntry>
+            <listEntry value="27">@Strings.DataMoveBar</listEntry>
+            <listEntry value="28">@Strings.DataIntensity</listEntry>
+            <listEntry value="29">@Strings.DataWeek</listEntry>
+            <listEntry value="30">@Strings.DataSunrise</listEntry>
+            <listEntry value="31">@Strings.DataSunset</listEntry>
             <listEntry value="21">@Strings.DataNone</listEntry>
         </settingConfig>
     </setting>

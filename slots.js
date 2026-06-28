@@ -58,8 +58,23 @@
         { id: 18, key: 'alarms',        stringId: 'DataAlarms',        label: 'Active Alarms',        header: 'ALARM' },
         { id: 19, key: 'notifications', stringId: 'DataNotifications', label: 'Notification Count',   header: 'MSG' },
         { id: 20, key: 'respiration',   stringId: 'DataRespiration',   label: 'Respiration Rate',     header: 'RESP' },
+        // Options added after v1.3.0. They take ids 22+ so the "None" sentinel
+        // can keep id 21 (renumbering it would silently change every saved
+        // "hidden" slot). "None" stays last in this list so it renders last in
+        // the settings dropdown regardless of its numeric id.
+        { id: 22, key: 'feelsLike',     stringId: 'DataFeelsLike',     label: 'Feels-Like Temp',      header: 'FEELS' },
+        { id: 23, key: 'humidity',      stringId: 'DataHumidity',      label: 'Humidity',             header: 'HUM' },
+        { id: 24, key: 'wind',          stringId: 'DataWind',          label: 'Wind Speed',           header: 'WIND' },
+        { id: 25, key: 'precip',        stringId: 'DataPrecip',        label: 'Precipitation Chance', header: 'RAIN' },
+        { id: 26, key: 'spo2',          stringId: 'DataSpo2',          label: 'Pulse Ox (SpO2)',      header: 'SPO2' },
+        { id: 27, key: 'moveBar',       stringId: 'DataMoveBar',       label: 'Move Bar',             header: 'MOVE' },
+        { id: 28, key: 'intensity',     stringId: 'DataIntensity',     label: 'Intensity Mins (Today)', header: 'INTEN' },
+        { id: 29, key: 'week',          stringId: 'DataWeek',          label: 'Week Number',          header: 'WEEK' },
+        { id: 30, key: 'sunrise',       stringId: 'DataSunrise',       label: 'Sunrise',              header: 'RISE' },
+        { id: 31, key: 'sunset',        stringId: 'DataSunset',        label: 'Sunset',               header: 'SET' },
         // 21 = the "hide this slot" sentinel. Handled specially in both
-        // renderers (drawn as nothing) so it has no header.
+        // renderers (drawn as nothing) so it has no header. Kept last for the
+        // dropdown; id 21 is frozen for backward compatibility.
         { id: 21, key: 'none',          stringId: 'DataNone',          label: 'None / Hidden',        header: null },
     ];
 
