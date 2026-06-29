@@ -1138,15 +1138,21 @@ class BinaryWatchView extends WatchUi.WatchFace {
         var radius = mCenterX - 12;
         dc.setPenWidth(3);
 
-        // Background track across the bottom (225deg bottom-left -> 315deg bottom-right).
+        // Narrow segment tucked at the very bottom (250deg -> 290deg). A wider
+        // sweep's endpoints land on the lower-left/right data fields, so keep it
+        // between the data row and the bezel. Sunrise on the left, sunset right.
+        var arcStart = 250;
+        var arcSpan = 40;
+
+        // Background track.
         dc.setColor(0x1E222A, Graphics.COLOR_TRANSPARENT);
-        dc.drawArc(mCenterX, mCenterY, radius, Graphics.ARC_COUNTER_CLOCKWISE, 225, 315);
+        dc.drawArc(mCenterX, mCenterY, radius, Graphics.ARC_COUNTER_CLOCKWISE, arcStart, arcStart + arcSpan);
 
         // Elapsed-daylight fill in the theme accent.
-        var fillEnd = 225 + (90 * frac).toNumber();
-        if (fillEnd > 225) {
+        var fillEnd = arcStart + (arcSpan * frac).toNumber();
+        if (fillEnd > arcStart) {
             dc.setColor(mActiveColors[mColorThemeSetting], Graphics.COLOR_TRANSPARENT);
-            dc.drawArc(mCenterX, mCenterY, radius, Graphics.ARC_COUNTER_CLOCKWISE, 225, fillEnd);
+            dc.drawArc(mCenterX, mCenterY, radius, Graphics.ARC_COUNTER_CLOCKWISE, arcStart, fillEnd);
         }
     }
 

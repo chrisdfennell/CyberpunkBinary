@@ -45,6 +45,11 @@ jobs:
           echo "${{ secrets.GARMIN_DEVELOPER_KEY }}" | base64 -d > developer_key.der
 
       - name: Build Garmin packages
+        # Artifacts are named with the tag (e.g. BinaryWatchFace-v1.5.1.iq) so the
+        # file you upload to the store is unambiguous -- avoids accidentally
+        # re-uploading an older same-named .iq.
+        env:
+          VER: ${{ github.ref_name }}
         run: |
           mkdir -p bin
 
@@ -53,7 +58,7 @@ jobs:
             -e \
             -f monkey.jungle \
             -y developer_key.der \
-            -o bin/BinaryWatchFace.iq
+            -o "bin/BinaryWatchFace-${VER}.iq"
 
           # Side-loadable .prg for every supported product (see manifest.xml).
           for device in fenix7 fenix7s fenix7x epix2 fr965 venu3 \
@@ -62,7 +67,7 @@ jobs:
             java -jar /connectiq/bin/monkeybrains.jar \
               -f monkey.jungle \
               -y developer_key.der \
-              -o "bin/BinaryWatchFace_${device}.prg" \
+              -o "bin/BinaryWatchFace-${VER}_${device}.prg" \
               -d "$device"
           done
 
@@ -72,5 +77,5 @@ jobs:
           name: Binary Watch Face ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            bin/BinaryWatchFace.iq
-            bin/BinaryWatchFace_*.prg
+            bin/BinaryWatchFace-*.iq
+            bin/BinaryWatchFace-*.prg
