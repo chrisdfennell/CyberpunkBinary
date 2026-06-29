@@ -1,6 +1,6 @@
 {
   "name": "cyberpunk-binary-watchface",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Garmin Cyberpunk BCD & Pure Binary Watchface Simulator",
   "author": "Fennell",
   "main": "index.html",
