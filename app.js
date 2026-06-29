@@ -552,22 +552,27 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
     }
 
-    // --- Daylight Progress Arc (bottom bezel, sunrise -> sunset) ---
+    // --- Daylight Progress Arc (narrow segment at the very bottom) ---
     function drawDayArc(ctx, frac) {
         const cx = 200, cy = 200, radius = 188;
         ctx.lineWidth = 3;
 
-        // Background track across the bottom (bottom-left -> bottom-right).
+        // Mirrors View.mc: Garmin 250deg->290deg, i.e. canvas 110deg->70deg, a
+        // narrow bottom segment that clears the lower-left/right data fields.
+        const leftA = (110 / 180) * Math.PI;   // sunrise side (bottom-left)
+        const rightA = (70 / 180) * Math.PI;   // sunset side (bottom-right)
+
+        // Background track.
         ctx.strokeStyle = '#1e222a';
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0.75 * Math.PI, 0.25 * Math.PI, true);
+        ctx.arc(cx, cy, radius, leftA, rightA, true);
         ctx.stroke();
 
         // Elapsed-daylight fill from the left (sunrise) in the theme accent.
-        const end = 0.75 * Math.PI - 0.5 * Math.PI * frac;
+        const end = leftA - (leftA - rightA) * frac;
         ctx.strokeStyle = themes[currentTheme].primary;
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0.75 * Math.PI, end, true);
+        ctx.arc(cx, cy, radius, leftA, end, true);
         ctx.stroke();
     }
 
