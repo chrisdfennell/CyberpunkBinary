@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let showBitLabels = true;    // 8/4/2/1 (or 32..1) row labels
     let showBattery = true;
     let showDate = true;
+    let showDayArc = false;
+    let weatherCat = 1;          // 0 clear, 1 cloud, 2 rain, 3 snow, 4 storm
     let gridMode = 'bcd'; // 'bcd' or 'pure'
     let freezeTime = false;
     let use24Hour = false;
@@ -93,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const bitLabelsToggle = document.getElementById('bit-labels-toggle');
     const batteryToggle = document.getElementById('battery-toggle');
     const dateToggle = document.getElementById('date-toggle');
+    const dayArcToggle = document.getElementById('day-arc-toggle');
+    const weatherConditionSelect = document.getElementById('weather-condition');
     const freezeToggle = document.getElementById('freeze-toggle');
     const hour24Toggle = document.getElementById('hour24-toggle');
 
@@ -166,6 +170,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dateToggle.addEventListener('change', (e) => {
         showDate = e.target.checked;
+    });
+
+    dayArcToggle.addEventListener('change', (e) => {
+        showDayArc = e.target.checked;
+    });
+
+    weatherConditionSelect.addEventListener('change', (e) => {
+        weatherCat = parseInt(e.target.value);
     });
 
     freezeToggle.addEventListener('change', (e) => {
@@ -274,6 +286,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render battery arc along the top (Only in active mode)
         if (!isAOD && showBattery) {
             drawBatteryArc(ctx, metrics.batt);
+        }
+
+        // Daylight progress arc along the bottom (sunrise -> sunset).
+        if (!isAOD && showDayArc) {
+            const sunriseMin = 5 * 60 + 34;  // matches mocked metrics.sunrise
+            const sunsetMin = 20 * 60 + 58;  // matches mocked metrics.sunset
+            const nowMin = hour * 60 + min;
+            let frac = (nowMin - sunriseMin) / (sunsetMin - sunriseMin);
+            if (frac < 0) frac = 0;
+            if (frac > 1) frac = 1;
+            drawDayArc(ctx, frac);
         }
 
         // --- Grid Positioning Metrics ---
@@ -529,6 +552,25 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
     }
 
+    // --- Daylight Progress Arc (bottom bezel, sunrise -> sunset) ---
+    function drawDayArc(ctx, frac) {
+        const cx = 200, cy = 200, radius = 188;
+        ctx.lineWidth = 3;
+
+        // Background track across the bottom (bottom-left -> bottom-right).
+        ctx.strokeStyle = '#1e222a';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0.75 * Math.PI, 0.25 * Math.PI, true);
+        ctx.stroke();
+
+        // Elapsed-daylight fill from the left (sunrise) in the theme accent.
+        const end = 0.75 * Math.PI - 0.5 * Math.PI * frac;
+        ctx.strokeStyle = themes[currentTheme].primary;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0.75 * Math.PI, end, true);
+        ctx.stroke();
+    }
+
     // --- Date and Status Badges ---
     function drawDateAndStatus(ctx, date) {
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -659,6 +701,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 ctx.fillStyle = '#a9b1d6';
                 ctx.fillText(solarStr, textX, statsY + Math.floor(fontHeight * 0.8));
+            } else if (type === 'weather' || type === 'feelsLike') {
+                // Weather slots: small condition glyph left of the value.
+                const textColor = (i === 1) ? activeTheme.primary : '#CDD6F4';
+                ctx.font = "13px 'Share Tech Mono'";
+                const valW = ctx.measureText(details.val).width;
+                const iconW = 16, gap = 3;
+                const groupW = iconW + gap + valW;
+                const groupLeft = cx - groupW / 2;
+                drawWeatherGlyphCanvas(ctx, groupLeft + iconW / 2, statsY + 2, weatherCat);
+                ctx.fillStyle = textColor;
+                ctx.textAlign = 'left';
+                ctx.fillText(details.val, groupLeft + iconW + gap, statsY + 2);
+                ctx.textAlign = 'center';
             } else {
                 const textColor = (i === 1) ? activeTheme.primary : '#CDD6F4';
                 ctx.fillStyle = textColor;
@@ -770,6 +825,44 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.moveTo(x - 4, y + 4); ctx.lineTo(x - 5, y + 5);
         ctx.moveTo(x + 4, y + 4); ctx.lineTo(x + 5, y + 5);
         ctx.stroke();
+    }
+
+    function drawCloudCanvas(ctx, cx, cy, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(cx - 4, cy, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, cy - 3, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(cx - 7, cy, 15, 4);
+    }
+
+    // Condition glyph: 0 clear, 1 cloud, 2 rain, 3 snow, 4 storm (mirrors View.mc).
+    function drawWeatherGlyphCanvas(ctx, cx, cy, cat) {
+        if (cat === 0) {
+            drawTinySunIconCanvas(ctx, cx, cy, '#ffcc00');
+            return;
+        }
+        drawCloudCanvas(ctx, cx, cy - 2, '#a9b1d6');
+        if (cat === 2) {
+            ctx.strokeStyle = '#4da6ff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 4, cy + 5); ctx.lineTo(cx - 6, cy + 9);
+            ctx.moveTo(cx, cy + 5); ctx.lineTo(cx - 2, cy + 9);
+            ctx.moveTo(cx + 4, cy + 5); ctx.lineTo(cx + 2, cy + 9);
+            ctx.stroke();
+        } else if (cat === 3) {
+            ctx.fillStyle = '#ccddff';
+            ctx.beginPath(); ctx.arc(cx - 4, cy + 7, 1, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx, cy + 8, 1, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx + 4, cy + 7, 1, 0, Math.PI * 2); ctx.fill();
+        } else if (cat === 4) {
+            ctx.strokeStyle = '#ffd000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx + 1, cy + 4); ctx.lineTo(cx - 2, cy + 9);
+            ctx.lineTo(cx + 2, cy + 8); ctx.lineTo(cx - 1, cy + 13);
+            ctx.stroke();
+        }
     }
 
     // Start render loops

@@ -5,6 +5,7 @@
     <property id="ShowBitLabels" type="boolean">true</property>
     <property id="ShowBattery" type="boolean">true</property>
     <property id="ShowDate" type="boolean">true</property>
+    <property id="ShowDayArc" type="boolean">false</property>
     <property id="ColorTheme" type="number">0</property>
     <property id="GridMode" type="number">0</property>
     <property id="DataLeft" type="number">0</property>

@@ -13,6 +13,8 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
   - **Pure Binary**: A purist layout with 3 columns representing the absolute values of Hours (5 bits), Minutes (6 bits), and Seconds (6 bits).
 - **Vibrant Color Themes**: Select between 10 glowing neon themes directly from your phone: **Cyberpunk Cyan**, **Neon Pink**, **Radioactive Green**, **Sci-Fi Amber**, **Monochrome Slate**, **Ice Blue**, **Crimson**, **Royal Purple**, **Gold**, and **Hazard**.
 - **Declutter Toggles**: Independently hide the **Digital Time** readout, the **Bit-Weight Labels** (`8/4/2/1`), the **Battery** indicator, and the **Date & Badges** — strip the face all the way down to just the glowing binary dots.
+- **Weather Condition Icons**: The **TEMP** and **FEELS** data slots show a small glyph (sun, cloud, rain, snow, or storm) next to the reading.
+- **Daylight Arc** *(optional, round watches)*: A thin arc along the bottom bezel shows how far through the day you are, from sunrise to sunset. Enable **Show Daylight Arc** in settings; requires a GPS fix.
 - **Always-On Display (AOD) Protection**: Dynamic screen-dimming and pixel-shifting every minute to prevent screen burn-in on premium AMOLED Garmin models.
 - **Smart Status Badges**:
   - **Phone Connected**: A glowing cyan status dot appears to the left of the Date when connected to Bluetooth.
