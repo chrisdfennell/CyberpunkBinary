@@ -2,6 +2,10 @@
     <string id="AppName">Binary Watch</string>
     <string id="ShowSecondsTitle">Show Seconds</string>
     <string id="ShowDataFieldsTitle">Show Data Fields</string>
+    <string id="ShowDigitalTimeTitle">Show Digital Time</string>
+    <string id="ShowBitLabelsTitle">Show Bit-Weight Labels</string>
+    <string id="ShowBatteryTitle">Show Battery Indicator</string>
+    <string id="ShowDateTitle">Show Date &amp; Badges</string>
     
     <!-- Grid Mode Strings -->
     <string id="GridModeTitle">Grid Layout Mode</string>
@@ -15,6 +19,11 @@
     <string id="ThemeGreen">Radioactive Green</string>
     <string id="ThemeAmber">Sci-Fi Amber</string>
     <string id="ThemeSlate">Monochrome Slate</string>
+    <string id="ThemeIce">Ice Blue</string>
+    <string id="ThemeCrimson">Crimson</string>
+    <string id="ThemePurple">Royal Purple</string>
+    <string id="ThemeGold">Gold</string>
+    <string id="ThemeHazard">Hazard</string>
     
     <!-- Data Field Configuration Strings -->
     <string id="DataLeftTitle">Data Slot: Left</string>

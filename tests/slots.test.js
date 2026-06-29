@@ -13,7 +13,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { SLOTS, NONE_ID } = require('../slots.js');
+const { SLOTS, NONE_ID, THEMES } = require('../slots.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -38,6 +38,7 @@ const stringsXml = read('resources/strings/strings.xml');
 const indexHtml = read('index.html');
 const appJs = read('app.js');
 const viewMc = read('source/View.mc');
+const propertiesXml = read('resources/settings/properties.xml');
 
 const REAL_SLOTS = SLOTS.filter(function (s) { return s.id !== NONE_ID; });
 
@@ -186,6 +187,88 @@ test('clamp range admits every id and None skip covers the sentinel', function (
         'View.mc clampDataFieldSetting should allow up to the max id (' + maxId + ')');
     assert(viewMc.indexOf('!= ' + NONE_ID) !== -1,
         'View.mc drawStats should filter out the NONE_ID slot');
+});
+
+// --- Color themes: parity across all five files ---------------------------
+
+console.log('theme parity');
+
+// (value,label) buttons from index.html's theme grid.
+function themeButtons() {
+    const buttons = [];
+    const r = /<button class="theme-btn[^"]*" data-theme="([^"]+)"[\s\S]*?<\/span>\s*([^<]+?)\s*<\/button>/g;
+    let m;
+    while ((m = r.exec(indexHtml)) !== null) {
+        buttons.push({ key: m[1], label: m[2] });
+    }
+    return buttons;
+}
+
+// Hex values (uppercase, no prefix) from the View.mc mActiveColors array.
+function viewActiveColors() {
+    const m = viewMc.match(/mActiveColors\s*=\s*\[([^\]]+)\]/);
+    assert(m, 'View.mc mActiveColors array not found');
+    return m[1].split(',').map(function (s) {
+        return s.trim().replace(/^0x/i, '').toUpperCase();
+    });
+}
+
+test('ids are 0..N-1 contiguous and unique', function () {
+    const ids = THEMES.map(function (t) { return t.id; });
+    assert.deepStrictEqual(ids, ids.map(function (_, i) { return i; }));
+});
+
+test('settings.xml ColorTheme lists every theme in order', function () {
+    const entries = listEntriesFor('ColorTheme');
+    assert.deepStrictEqual(
+        entries,
+        THEMES.map(function (t) { return { id: t.id, stringId: t.stringId }; })
+    );
+});
+
+test('strings.xml defines every theme label', function () {
+    const map = stringsMap();
+    THEMES.forEach(function (t) {
+        assert.strictEqual(map[t.stringId], t.label,
+            t.stringId + ': "' + map[t.stringId] + '" != "' + t.label + '"');
+    });
+});
+
+test('index.html theme buttons mirror themes in order', function () {
+    assert.deepStrictEqual(
+        themeButtons(),
+        THEMES.map(function (t) { return { key: t.key, label: t.label }; })
+    );
+});
+
+test('app.js themes map defines every theme with the right accent', function () {
+    THEMES.forEach(function (t) {
+        const needle = t.key + ": { primary: '#" + t.hex.toLowerCase() + "'";
+        assert(appJs.indexOf(needle) !== -1,
+            'app.js themes map missing/mismatched "' + t.key + '" (#' + t.hex.toLowerCase() + ')');
+    });
+});
+
+test('View.mc mActiveColors matches the theme accents in order', function () {
+    assert.deepStrictEqual(
+        viewActiveColors(),
+        THEMES.map(function (t) { return t.hex; })
+    );
+});
+
+// --- Display toggles: property <-> setting parity -------------------------
+
+console.log('toggle parity');
+
+const TOGGLES = ['ShowSeconds', 'ShowDataFields', 'ShowDigitalTime', 'ShowBitLabels', 'ShowBattery', 'ShowDate'];
+
+test('every display toggle has both a property and a setting', function () {
+    TOGGLES.forEach(function (id) {
+        assert(propertiesXml.indexOf('<property id="' + id + '" type="boolean">') !== -1,
+            'properties.xml missing boolean property ' + id);
+        assert(settingsXml.indexOf('propertyKey="@Properties.' + id + '"') !== -1,
+            'settings.xml missing setting for ' + id);
+    });
 });
 
 console.log('\n' + passed + ' assertions passed.');

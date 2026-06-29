@@ -82,8 +82,31 @@
     // renderers and clamp logic don't sprinkle the magic number 21 around.
     const NONE_ID = 21;
 
+    // Color themes — the ColorTheme setting is an index into this list. Mirrored
+    // in settings.xml (listEntries), strings.xml (labels), View.mc
+    // (mActiveColors hex array), app.js (themes map primary), and index.html
+    // (theme buttons). The parity tests assert all of them agree.
+    //   id       ColorTheme setting value / mActiveColors index
+    //   key      simulator theme key (app.js themes map + index.html data-theme)
+    //   stringId strings.xml id used by settings.xml
+    //   label    human label (strings.xml body AND index.html button text)
+    //   hex      accent color, uppercase RRGGBB (View.mc 0xRRGGBB, app.js #rrggbb)
+    const THEMES = [
+        { id: 0, key: 'cyan',    stringId: 'ThemeCyan',    label: 'Cyberpunk Cyan',   hex: '00FFFF' },
+        { id: 1, key: 'pink',    stringId: 'ThemePink',    label: 'Neon Pink',        hex: 'FF00FF' },
+        { id: 2, key: 'green',   stringId: 'ThemeGreen',   label: 'Radioactive Green', hex: '00FF00' },
+        { id: 3, key: 'amber',   stringId: 'ThemeAmber',   label: 'Sci-Fi Amber',     hex: 'FF8800' },
+        { id: 4, key: 'slate',   stringId: 'ThemeSlate',   label: 'Monochrome Slate', hex: 'FFFFFF' },
+        { id: 5, key: 'ice',     stringId: 'ThemeIce',     label: 'Ice Blue',         hex: '33CCFF' },
+        { id: 6, key: 'crimson', stringId: 'ThemeCrimson', label: 'Crimson',          hex: 'FF1144' },
+        { id: 7, key: 'purple',  stringId: 'ThemePurple',  label: 'Royal Purple',     hex: 'BB66FF' },
+        { id: 8, key: 'gold',    stringId: 'ThemeGold',    label: 'Gold',             hex: 'FFB300' },
+        { id: 9, key: 'hazard',  stringId: 'ThemeHazard',  label: 'Hazard',           hex: 'CCFF33' },
+    ];
+
     return {
         SLOTS: SLOTS,
         NONE_ID: NONE_ID,
+        THEMES: THEMES,
     };
 });

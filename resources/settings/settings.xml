@@ -7,6 +7,22 @@
         <settingConfig type="boolean" />
     </setting>
 
+    <setting propertyKey="@Properties.ShowDigitalTime" title="@Strings.ShowDigitalTimeTitle" prompt="@Strings.ShowDigitalTimeTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.ShowBitLabels" title="@Strings.ShowBitLabelsTitle" prompt="@Strings.ShowBitLabelsTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.ShowBattery" title="@Strings.ShowBatteryTitle" prompt="@Strings.ShowBatteryTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.ShowDate" title="@Strings.ShowDateTitle" prompt="@Strings.ShowDateTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
     <setting propertyKey="@Properties.GridMode" title="@Strings.GridModeTitle" prompt="@Strings.GridModeTitle">
         <settingConfig type="list">
             <listEntry value="0">@Strings.GridModeBCD</listEntry>
@@ -21,6 +37,11 @@
             <listEntry value="2">@Strings.ThemeGreen</listEntry>
             <listEntry value="3">@Strings.ThemeAmber</listEntry>
             <listEntry value="4">@Strings.ThemeSlate</listEntry>
+            <listEntry value="5">@Strings.ThemeIce</listEntry>
+            <listEntry value="6">@Strings.ThemeCrimson</listEntry>
+            <listEntry value="7">@Strings.ThemePurple</listEntry>
+            <listEntry value="8">@Strings.ThemeGold</listEntry>
+            <listEntry value="9">@Strings.ThemeHazard</listEntry>
         </settingConfig>
     </setting>
     

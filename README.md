@@ -11,7 +11,8 @@ A premium, highly customizable, and visually stunning BCD and Pure Binary watch 
 - **Double Grid Layout Modes**:
   - **BCD (Binary Coded Decimal)**: Default layout. Columns represent individual decimal digits of Hours, Minutes, and Seconds.
   - **Pure Binary**: A purist layout with 3 columns representing the absolute values of Hours (5 bits), Minutes (6 bits), and Seconds (6 bits).
-- **Vibrant Color Themes**: Select between 5 glowing neon themes directly from your phone: **Cyberpunk Cyan**, **Neon Pink**, **Radioactive Green**, **Sci-Fi Amber**, and **Monochrome Slate**.
+- **Vibrant Color Themes**: Select between 10 glowing neon themes directly from your phone: **Cyberpunk Cyan**, **Neon Pink**, **Radioactive Green**, **Sci-Fi Amber**, **Monochrome Slate**, **Ice Blue**, **Crimson**, **Royal Purple**, **Gold**, and **Hazard**.
+- **Declutter Toggles**: Independently hide the **Digital Time** readout, the **Bit-Weight Labels** (`8/4/2/1`), the **Battery** indicator, and the **Date & Badges** — strip the face all the way down to just the glowing binary dots.
 - **Always-On Display (AOD) Protection**: Dynamic screen-dimming and pixel-shifting every minute to prevent screen burn-in on premium AMOLED Garmin models.
 - **Smart Status Badges**:
   - **Phone Connected**: A glowing cyan status dot appears to the left of the Date when connected to Bluetooth.

@@ -11,8 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTheme = 'cyan';
     let isAOD = false;
     let showSeconds = true;
-    let showLabels = true;
+    let showLabels = true;       // digital HH:MM:SS readout below the grid
     let showDataFields = true;
+    let showBitLabels = true;    // 8/4/2/1 (or 32..1) row labels
+    let showBattery = true;
+    let showDate = true;
     let gridMode = 'bcd'; // 'bcd' or 'pure'
     let freezeTime = false;
     let use24Hour = false;
@@ -30,7 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pink: { primary: '#ff00ff', glow: 'rgba(255, 0, 255, 0.25)', dim: '#550055', inactiveDot: '#2d1a2d', inactiveBorder: '#4b294b' },
         green: { primary: '#00ff00', glow: 'rgba(0, 255, 0, 0.25)', dim: '#005500', inactiveDot: '#1a2d1a', inactiveBorder: '#294b29' },
         amber: { primary: '#ff8800', glow: 'rgba(255, 136, 0, 0.25)', dim: '#552200', inactiveDot: '#2d231a', inactiveBorder: '#4b3c29' },
-        slate: { primary: '#ffffff', glow: 'rgba(255, 255, 255, 0.15)', dim: '#555555', inactiveDot: '#222225', inactiveBorder: '#3f3f45' }
+        slate: { primary: '#ffffff', glow: 'rgba(255, 255, 255, 0.15)', dim: '#555555', inactiveDot: '#222225', inactiveBorder: '#3f3f45' },
+        ice: { primary: '#33ccff', glow: 'rgba(51, 204, 255, 0.22)', dim: '#113344', inactiveDot: '#16242d', inactiveBorder: '#27424f' },
+        crimson: { primary: '#ff1144', glow: 'rgba(255, 17, 68, 0.22)', dim: '#550011', inactiveDot: '#2d161b', inactiveBorder: '#4b2730' },
+        purple: { primary: '#bb66ff', glow: 'rgba(187, 102, 255, 0.22)', dim: '#330a55', inactiveDot: '#241a2d', inactiveBorder: '#3c2a4b' },
+        gold: { primary: '#ffb300', glow: 'rgba(255, 179, 0, 0.22)', dim: '#553a00', inactiveDot: '#2d2616', inactiveBorder: '#4b4027' },
+        hazard: { primary: '#ccff33', glow: 'rgba(204, 255, 51, 0.22)', dim: '#344d00', inactiveDot: '#222d16', inactiveBorder: '#3c4b27' }
     };
 
     // Live Simulated Metrics
@@ -82,6 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondsToggle = document.getElementById('seconds-toggle');
     const labelsToggle = document.getElementById('labels-toggle');
     const dataFieldsToggle = document.getElementById('data-fields-toggle');
+    const bitLabelsToggle = document.getElementById('bit-labels-toggle');
+    const batteryToggle = document.getElementById('battery-toggle');
+    const dateToggle = document.getElementById('date-toggle');
     const freezeToggle = document.getElementById('freeze-toggle');
     const hour24Toggle = document.getElementById('hour24-toggle');
 
@@ -143,6 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dataFieldsToggle.addEventListener('change', (e) => {
         showDataFields = e.target.checked;
+    });
+
+    bitLabelsToggle.addEventListener('change', (e) => {
+        showBitLabels = e.target.checked;
+    });
+
+    batteryToggle.addEventListener('change', (e) => {
+        showBattery = e.target.checked;
+    });
+
+    dateToggle.addEventListener('change', (e) => {
+        showDate = e.target.checked;
     });
 
     freezeToggle.addEventListener('change', (e) => {
@@ -249,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Render battery arc along the top (Only in active mode)
-        if (!isAOD) {
+        if (!isAOD && showBattery) {
             drawBatteryArc(ctx, metrics.batt);
         }
 
@@ -279,7 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render stats & date overlay (only if not AOD)
         if (!isAOD) {
-            drawDateAndStatus(ctx, now);
+            if (showDate) {
+                drawDateAndStatus(ctx, now);
+            }
             // Master toggle hides the whole bottom data row; per-slot "None"
             // is handled inside drawStats (mirrors View.mc).
             if (showDataFields) {
@@ -324,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rowBits = BinaryClock.BCD_ROW_BITS;
 
         // Draw left helper labels
-        if (!isAOD) {
+        if (!isAOD && showBitLabels) {
             ctx.fillStyle = '#555A70';
             ctx.font = "12px 'Share Tech Mono'";
             ctx.textAlign = 'center';
@@ -384,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rowBits = BinaryClock.PURE_ROW_BITS;
 
         // Draw left helper labels
-        if (!isAOD) {
+        if (!isAOD && showBitLabels) {
             ctx.fillStyle = '#555A70';
             ctx.font = "12px 'Share Tech Mono'";
             ctx.textAlign = 'center';

@@ -28,15 +28,21 @@ class BinaryWatchView extends WatchUi.WatchFace {
     // Configurable Settings (with defaults)
     private var mShowSecondsSetting as Boolean = true;
     private var mShowDataFieldsSetting as Boolean = true;
+    private var mShowDigitalTimeSetting as Boolean = true;
+    private var mShowBitLabelsSetting as Boolean = true;
+    private var mShowBatterySetting as Boolean = true;
+    private var mShowDateSetting as Boolean = true;
     private var mColorThemeSetting as Number = 0;
     private var mGridModeSetting as Number = 0;     // 0 = BCD, 1 = Pure Binary
     private var mDataLeftSetting as Number = 0;     // Default: Steps
     private var mDataCenterSetting as Number = 1;   // Default: Battery
     private var mDataRightSetting as Number = 2;    // Default: Heart Rate
 
-    // Color themes active and glow mappings
-    private var mActiveColors = [0x00FFFF, 0xFF00FF, 0x00FF00, 0xFF8800, 0xFFFFFF];
-    private var mGlowColors = [0x005555, 0x550055, 0x005500, 0x552200, 0x555555];
+    // Color themes active and glow mappings (index == ColorTheme setting value):
+    // 0 Cyan, 1 Pink, 2 Green, 3 Amber, 4 Slate, 5 Ice, 6 Crimson, 7 Purple,
+    // 8 Gold, 9 Hazard.
+    private var mActiveColors = [0x00FFFF, 0xFF00FF, 0x00FF00, 0xFF8800, 0xFFFFFF, 0x33CCFF, 0xFF1144, 0xBB66FF, 0xFFB300, 0xCCFF33];
+    private var mGlowColors = [0x005555, 0x550055, 0x005500, 0x552200, 0x555555, 0x113344, 0x550011, 0x330A55, 0x553A00, 0x344D00];
 
     // Geometry cached from the last full onUpdate() so onPartialUpdate() can
     // redraw just the seconds column(s) once per second in low-power mode,
@@ -62,6 +68,10 @@ class BinaryWatchView extends WatchUi.WatchFace {
         // sanitizeSettings() (which would crash on a null comparison).
         mShowSecondsSetting = readBoolProperty("ShowSeconds", true);
         mShowDataFieldsSetting = readBoolProperty("ShowDataFields", true);
+        mShowDigitalTimeSetting = readBoolProperty("ShowDigitalTime", true);
+        mShowBitLabelsSetting = readBoolProperty("ShowBitLabels", true);
+        mShowBatterySetting = readBoolProperty("ShowBattery", true);
+        mShowDateSetting = readBoolProperty("ShowDate", true);
         mColorThemeSetting = readNumberProperty("ColorTheme", 0);
         mGridModeSetting = readNumberProperty("GridMode", 0);
         mDataLeftSetting = readNumberProperty("DataLeft", 0);
@@ -221,8 +231,14 @@ class BinaryWatchView extends WatchUi.WatchFace {
             var systemStats = System.getSystemStats();
             var monitorInfo = ActivityMonitor.getInfo();
             var activityData = Activity.getActivityInfo();
-            drawDateAndStatus(dc, deviceSettings);
-            drawBattery(dc, systemStats, deviceSettings);
+            // Each overlay is independently hideable via settings, so users can
+            // strip the face down to just the binary dots.
+            if (mShowDateSetting) {
+                drawDateAndStatus(dc, deviceSettings);
+            }
+            if (mShowBatterySetting) {
+                drawBattery(dc, systemStats, deviceSettings);
+            }
             // Master toggle hides the entire bottom data row; individual slots
             // can also be hidden via the per-slot "None" option (handled in drawStats).
             if (mShowDataFieldsSetting) {
@@ -260,7 +276,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             var rowBits = [32, 16, 8, 4, 2, 1, 0];
             
             // Draw left helper labels (only if burn-in protection is not active)
-            if (!burnInActive) {
+            if (!burnInActive && mShowBitLabelsSetting) {
                 var labelX = colX[0] - (mGroupGap * 0.55).toNumber();
                 dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
                 for (var r = 0; r < 7; r++) {
@@ -290,7 +306,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             }
             
             // Draw digital time helper values directly below the columns
-            if (!burnInActive) {
+            if (!burnInActive && mShowDigitalTimeSetting) {
                 dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
                 var textY = mGridTop + 6 * mRowSpacing + (mRowSpacing * 0.75).toNumber();
                 for (var c = 0; c < numCols; c++) {
@@ -365,7 +381,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             
             var rowBits = [8, 4, 2, 1, 0];
             
-            if (!burnInActive) {
+            if (!burnInActive && mShowBitLabelsSetting) {
                 var labelX = colX[0] - mColGap;
                 dc.setColor(0x555A70, Graphics.COLOR_TRANSPARENT);
                 for (var r = 0; r < 5; r++) {
@@ -399,7 +415,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
             }
             
             // Draw digital time helper values directly below the columns
-            if (!burnInActive) {
+            if (!burnInActive && mShowDigitalTimeSetting) {
                 dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
                 var textY = mGridTop + 4 * mRowSpacing + (mRowSpacing * 0.75).toNumber();
                 for (var c = 0; c < numCols; c++) {
@@ -447,7 +463,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 var isActive = (bit == 0) ? (sec == 0) : ((sec & bit) != 0);
                 drawDot(dc, x, mGridTop + r * mRowSpacing, isActive, mBurnInActive);
             }
-            if (!mBurnInActive) {
+            if (!mBurnInActive && mShowDigitalTimeSetting) {
                 dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
                 var s = sec.toString();
                 if (sec < 10) { s = "0" + s; }
@@ -469,7 +485,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
                     drawDot(dc, cols[c], mGridTop + r * mRowSpacing, isActive, mBurnInActive);
                 }
             }
-            if (!mBurnInActive) {
+            if (!mBurnInActive && mShowDigitalTimeSetting) {
                 dc.setColor(0xCDD6F4, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(colX[4], mDigitalTextY - 8, Graphics.FONT_XTINY, sTens.toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 dc.drawText(colX[5], mDigitalTextY - 8, Graphics.FONT_XTINY, sOnes.toString(), Graphics.TEXT_JUSTIFY_CENTER);
