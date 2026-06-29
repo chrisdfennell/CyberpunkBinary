@@ -6,6 +6,7 @@
     <string id="ShowBitLabelsTitle">Show Bit-Weight Labels</string>
     <string id="ShowBatteryTitle">Show Battery Indicator</string>
     <string id="ShowDateTitle">Show Date &amp; Badges</string>
+    <string id="ShowDayArcTitle">Show Daylight Arc</string>
     
     <!-- Grid Mode Strings -->
     <string id="GridModeTitle">Grid Layout Mode</string>

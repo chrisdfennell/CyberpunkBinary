@@ -23,6 +23,10 @@
         <settingConfig type="boolean" />
     </setting>
 
+    <setting propertyKey="@Properties.ShowDayArc" title="@Strings.ShowDayArcTitle" prompt="@Strings.ShowDayArcTitle">
+        <settingConfig type="boolean" />
+    </setting>
+
     <setting propertyKey="@Properties.GridMode" title="@Strings.GridModeTitle" prompt="@Strings.GridModeTitle">
         <settingConfig type="list">
             <listEntry value="0">@Strings.GridModeBCD</listEntry>

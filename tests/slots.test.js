@@ -260,7 +260,7 @@ test('View.mc mActiveColors matches the theme accents in order', function () {
 
 console.log('toggle parity');
 
-const TOGGLES = ['ShowSeconds', 'ShowDataFields', 'ShowDigitalTime', 'ShowBitLabels', 'ShowBattery', 'ShowDate'];
+const TOGGLES = ['ShowSeconds', 'ShowDataFields', 'ShowDigitalTime', 'ShowBitLabels', 'ShowBattery', 'ShowDate', 'ShowDayArc'];
 
 test('every display toggle has both a property and a setting', function () {
     TOGGLES.forEach(function (id) {

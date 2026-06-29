@@ -32,6 +32,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
     private var mShowBitLabelsSetting as Boolean = true;
     private var mShowBatterySetting as Boolean = true;
     private var mShowDateSetting as Boolean = true;
+    private var mShowDayArcSetting as Boolean = false;
     private var mColorThemeSetting as Number = 0;
     private var mGridModeSetting as Number = 0;     // 0 = BCD, 1 = Pure Binary
     private var mDataLeftSetting as Number = 0;     // Default: Steps
@@ -72,6 +73,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         mShowBitLabelsSetting = readBoolProperty("ShowBitLabels", true);
         mShowBatterySetting = readBoolProperty("ShowBattery", true);
         mShowDateSetting = readBoolProperty("ShowDate", true);
+        mShowDayArcSetting = readBoolProperty("ShowDayArc", false);
         mColorThemeSetting = readNumberProperty("ColorTheme", 0);
         mGridModeSetting = readNumberProperty("GridMode", 0);
         mDataLeftSetting = readNumberProperty("DataLeft", 0);
@@ -238,6 +240,9 @@ class BinaryWatchView extends WatchUi.WatchFace {
             }
             if (mShowBatterySetting) {
                 drawBattery(dc, systemStats, deviceSettings);
+            }
+            if (mShowDayArcSetting) {
+                drawDayArc(dc, deviceSettings);
             }
             // Master toggle hides the entire bottom data row; individual slots
             // can also be hidden via the per-slot "None" option (handled in drawStats).
@@ -1045,16 +1050,19 @@ class BinaryWatchView extends WatchUi.WatchFace {
     // Sunrise/sunset using the standard sunrise equation (Almanac for
     // Computers). Needs a location fix from Position; returns "--" until one is
     // available or when the sun doesn't rise/set that day at this latitude.
-    private function sunEventString(devSettings, isSunrise as Boolean) as String {
+    // Local minutes since midnight (0..1439) for sunrise/sunset, or -1 when
+    // there's no GPS fix yet or the sun doesn't rise/set today. Shared by the
+    // RISE/SET data fields and the day-progress arc.
+    private function sunEventMinutes(isSunrise as Boolean) as Number {
         var posInfo = Position.getInfo();
         if (posInfo == null || posInfo.position == null) {
-            return "--";
+            return -1;
         }
         var loc = posInfo.position.toDegrees();
         var lat = loc[0];
         var lon = loc[1];
         if (lat == 0.0 && lon == 0.0) {
-            return "--"; // no real fix yet (default 0,0)
+            return -1; // no real fix yet (default 0,0)
         }
 
         var now = Time.now();
@@ -1080,7 +1088,7 @@ class BinaryWatchView extends WatchUi.WatchFace {
         var zenith = 90.833; // official sunrise/sunset incl. refraction
         var cosH = (dcos(zenith) - (sinDec * dsin(lat))) / (cosDec * dcos(lat));
         if (cosH > 1.0 || cosH < -1.0) {
-            return "--"; // sun never rises / never sets here today
+            return -1; // sun never rises / never sets here today
         }
 
         var h = (isSunrise ? (360.0 - dacos(cosH)) : dacos(cosH)) / 15.0;
@@ -1090,19 +1098,112 @@ class BinaryWatchView extends WatchUi.WatchFace {
         var tzHours = System.getClockTime().timeZoneOffset / 3600.0;
         var localT = normHours(ut + tzHours);
 
-        var hh = Math.floor(localT).toNumber();
-        var mm = Math.round((localT - hh) * 60.0).toNumber();
-        if (mm >= 60) {
-            mm = 0;
-            hh = (hh + 1) % 24;
-        }
+        return Math.round(localT * 60.0).toNumber();
+    }
 
+    private function sunEventString(devSettings, isSunrise as Boolean) as String {
+        var mins = sunEventMinutes(isSunrise);
+        if (mins < 0) {
+            return "--";
+        }
+        var hh = (mins / 60) % 24;
+        var mm = mins % 60;
         if (!devSettings.is24Hour) {
             var h12 = hh % 12;
             if (h12 == 0) { h12 = 12; }
             return h12.toString() + ":" + twoDigits(mm);
         }
         return hh.toString() + ":" + twoDigits(mm);
+    }
+
+    // Thin arc along the bottom bezel showing how far through daylight we are
+    // (sunrise at bottom-left -> sunset at bottom-right). Round screens only;
+    // silently skips until there's a GPS fix.
+    function drawDayArc(dc as Dc, devSettings) as Void {
+        if (devSettings.screenShape != System.SCREEN_SHAPE_ROUND) {
+            return;
+        }
+        var riseMin = sunEventMinutes(true);
+        var setMin = sunEventMinutes(false);
+        if (riseMin < 0 || setMin < 0 || setMin <= riseMin) {
+            return;
+        }
+
+        var ct = System.getClockTime();
+        var nowMin = ct.hour * 60 + ct.min;
+        var frac = (nowMin - riseMin).toFloat() / (setMin - riseMin).toFloat();
+        if (frac < 0.0) { frac = 0.0; }
+        if (frac > 1.0) { frac = 1.0; }
+
+        var radius = mCenterX - 12;
+        dc.setPenWidth(3);
+
+        // Background track across the bottom (225deg bottom-left -> 315deg bottom-right).
+        dc.setColor(0x1E222A, Graphics.COLOR_TRANSPARENT);
+        dc.drawArc(mCenterX, mCenterY, radius, Graphics.ARC_COUNTER_CLOCKWISE, 225, 315);
+
+        // Elapsed-daylight fill in the theme accent.
+        var fillEnd = 225 + (90 * frac).toNumber();
+        if (fillEnd > 225) {
+            dc.setColor(mActiveColors[mColorThemeSetting], Graphics.COLOR_TRANSPARENT);
+            dc.drawArc(mCenterX, mCenterY, radius, Graphics.ARC_COUNTER_CLOCKWISE, 225, fillEnd);
+        }
+    }
+
+    // Collapse the ~50 Weather.CONDITION_* codes into 5 icon buckets:
+    // 0 clear, 1 cloud, 2 rain, 3 snow, 4 storm. Anything unmapped -> cloud.
+    private function weatherIconCategory(cond as Number) as Number {
+        if (cond == Weather.CONDITION_CLEAR) {
+            return 0;
+        }
+        if (cond == Weather.CONDITION_THUNDERSTORMS || cond == Weather.CONDITION_SCATTERED_THUNDERSTORMS) {
+            return 4;
+        }
+        if (cond == Weather.CONDITION_SNOW || cond == Weather.CONDITION_LIGHT_SNOW
+            || cond == Weather.CONDITION_HEAVY_SNOW || cond == Weather.CONDITION_WINTRY_MIX
+            || cond == Weather.CONDITION_HAIL) {
+            return 3;
+        }
+        if (cond == Weather.CONDITION_RAIN || cond == Weather.CONDITION_LIGHT_RAIN
+            || cond == Weather.CONDITION_HEAVY_RAIN || cond == Weather.CONDITION_SCATTERED_SHOWERS) {
+            return 2;
+        }
+        return 1; // partly/mostly cloudy, cloudy, windy, fog, haze, unknown
+    }
+
+    private function drawCloud(dc as Dc, cx as Number, cy as Number, color as Number) as Void {
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(cx - 4, cy, 4);
+        dc.fillCircle(cx + 4, cy, 4);
+        dc.fillCircle(cx, cy - 3, 5);
+        dc.fillRectangle(cx - 7, cy, 15, 4);
+    }
+
+    // Small condition glyph centered on (cx, cy), ~16px wide.
+    private function drawWeatherGlyph(dc as Dc, cx as Number, cy as Number, category as Number) as Void {
+        if (category == 0) {
+            drawTinySunIcon(dc, cx, cy, 0xFFCC00);
+            return;
+        }
+        drawCloud(dc, cx, cy - 2, 0xA9B1D6);
+        if (category == 2) {
+            dc.setColor(0x4DA6FF, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(1);
+            dc.drawLine(cx - 4, cy + 5, cx - 6, cy + 9);
+            dc.drawLine(cx, cy + 5, cx - 2, cy + 9);
+            dc.drawLine(cx + 4, cy + 5, cx + 2, cy + 9);
+        } else if (category == 3) {
+            dc.setColor(0xCCDDFF, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(cx - 4, cy + 7, 1);
+            dc.fillCircle(cx, cy + 8, 1);
+            dc.fillCircle(cx + 4, cy + 7, 1);
+        } else if (category == 4) {
+            dc.setColor(0xFFD000, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(2);
+            dc.drawLine(cx + 1, cy + 4, cx - 2, cy + 9);
+            dc.drawLine(cx - 2, cy + 9, cx + 2, cy + 8);
+            dc.drawLine(cx + 2, cy + 8, cx - 1, cy + 13);
+        }
     }
 
     function drawStats(dc as Dc, sysStats, monInfo, activity, devSettings) as Void {
@@ -1169,6 +1270,30 @@ class BinaryWatchView extends WatchUi.WatchFace {
                 // Draw solar text
                 dc.setColor(0xA9B1D6, Graphics.COLOR_TRANSPARENT); // Dimmer blue-grey for secondary stats
                 dc.drawText(textX, statsY + (fontHeight * 0.8).toNumber(), Graphics.FONT_XTINY, solarStr, Graphics.TEXT_JUSTIFY_CENTER);
+            } else if (setting == 3 || setting == 22) {
+                // Weather slots (TEMP / FEELS): draw a small condition glyph to
+                // the left of the value when conditions are available.
+                var cat = -1;
+                if (Toybox has :Weather) {
+                    var cond = Weather.getCurrentConditions();
+                    if (cond != null && cond.condition != null) {
+                        cat = weatherIconCategory(cond.condition);
+                    }
+                }
+                var wTextColor = (i == 1) ? themeColor : 0xCDD6F4;
+                dc.setColor(wTextColor, Graphics.COLOR_TRANSPARENT);
+                if (cat < 0) {
+                    dc.drawText(cx, statsY + 2, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_CENTER);
+                } else {
+                    var valW = dc.getTextWidthInPixels(info[1], Graphics.FONT_XTINY);
+                    var iconW = 16;
+                    var gap = 3;
+                    var groupW = iconW + gap + valW;
+                    var groupLeft = cx - (groupW / 2);
+                    drawWeatherGlyph(dc, groupLeft + (iconW / 2), statsY + 2 + (fontHeight / 2), cat);
+                    dc.setColor(wTextColor, Graphics.COLOR_TRANSPARENT);
+                    dc.drawText(groupLeft + iconW + gap, statsY + 2, Graphics.FONT_XTINY, info[1], Graphics.TEXT_JUSTIFY_LEFT);
+                }
             } else {
                 // Highlight middle slot, else print standard text
                 var textColor = (i == 1) ? themeColor : 0xCDD6F4;
